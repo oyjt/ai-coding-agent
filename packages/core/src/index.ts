@@ -2,6 +2,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ProjectType } from '@ai-coding-agent/config';
 
+export interface ProjectInfo {
+  type: ProjectType;
+  packageManager: 'pnpm' | 'yarn' | 'npm' | 'bun' | 'unknown';
+  hasAgentConfig: boolean;
+}
+
 export function detectProjectType(cwd = process.cwd()): ProjectType {
   const packageFile = join(cwd, 'package.json');
   if (!existsSync(packageFile)) return 'unknown';
@@ -18,4 +24,20 @@ export function detectProjectType(cwd = process.cwd()): ProjectType {
     return 'unknown';
   }
   return 'unknown';
+}
+
+export function detectPackageManager(cwd = process.cwd()): ProjectInfo['packageManager'] {
+  if (existsSync(join(cwd, 'pnpm-lock.yaml'))) return 'pnpm';
+  if (existsSync(join(cwd, 'yarn.lock'))) return 'yarn';
+  if (existsSync(join(cwd, 'bun.lockb')) || existsSync(join(cwd, 'bun.lock'))) return 'bun';
+  if (existsSync(join(cwd, 'package-lock.json'))) return 'npm';
+  return 'unknown';
+}
+
+export function inspectProject(cwd = process.cwd()): ProjectInfo {
+  return {
+    type: detectProjectType(cwd),
+    packageManager: detectPackageManager(cwd),
+    hasAgentConfig: existsSync(join(cwd, '.aca', 'agent.yaml')),
+  };
 }
