@@ -1,10 +1,12 @@
 S:
+  spec: false
   planning: false
   review: false
   verification:
     - lint
 
 M:
+  spec: optional
   planning: recommended
   review: true
   verification:
@@ -13,6 +15,7 @@ M:
     - typecheck
 
 L:
+  spec: required
   planning: required
   review: true
   verification:
@@ -22,6 +25,7 @@ L:
     - build
 
 CRITICAL:
+  spec: required
   planning: required
   review: required
   verification:
