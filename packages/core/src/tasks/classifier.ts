@@ -4,10 +4,10 @@ import type { TaskClassification, TaskInput } from './types.js';
 type Rule = { id: string; level: TaskLevel; patterns: RegExp[]; reason: string };
 
 const CRITICAL_RULES: Rule[] = [
-  { id: 'authentication', level: 'CRITICAL', patterns: [/认证/i, /登录/i, /oauth/i, /sso/i, /token/i, /authentication/i], reason: '涉及认证' },
-  { id: 'authorization', level: 'CRITICAL', patterns: [/权限/i, /授权/i, /rbac/i, /acl/i, /permission/i, /authorization/i], reason: '涉及权限或授权' },
-  { id: 'money', level: 'CRITICAL', patterns: [/支付/i, /资金/i, /金额/i, /退款/i, /billing/i, /payment/i], reason: '涉及资金或支付' },
-  { id: 'production', level: 'CRITICAL', patterns: [/生产环境/i, /production/i, /prod/i], reason: '涉及生产配置' },
+  { id: 'authentication', level: 'CRITICAL', patterns: [/认证机制/i, /认证流程/i, /认证接口/i, /oauth/i, /sso/i, /token/i, /authentication/i], reason: '涉及认证机制或认证流程' },
+  { id: 'authorization', level: 'CRITICAL', patterns: [/权限校验/i, /权限模型/i, /授权机制/i, /rbac/i, /acl/i, /permission/i, /authorization/i], reason: '涉及权限或授权机制' },
+  { id: 'money', level: 'CRITICAL', patterns: [/支付接口/i, /支付流程/i, /资金/i, /退款/i, /billing/i, /payment/i], reason: '涉及资金或支付流程' },
+  { id: 'production', level: 'CRITICAL', patterns: [/生产环境配置/i, /生产配置/i, /production config/i, /prod config/i], reason: '涉及生产配置' },
   { id: 'migration', level: 'CRITICAL', patterns: [/数据库迁移/i, /数据迁移/i, /migration/i, /migrate/i, /删除数据/i], reason: '涉及数据迁移或删除' },
   { id: 'external-integration', level: 'CRITICAL', patterns: [/第三方集成/i, /外部集成/i, /webhook/i, /外部服务/i, /external integration/i], reason: '涉及外部集成' },
 ];
