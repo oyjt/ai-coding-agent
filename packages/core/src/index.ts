@@ -5,6 +5,7 @@ import { checkDependencies, createDependencyPlan } from './dependencies/index.js
 export type { DependencyAdapter, DependencyCheckResult, DependencyPlan } from './dependencies/index.js';
 export { getRuntimeAdapter } from './runtimes/index.js';
 export type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './runtimes/index.js';
+export * from './workflows/index.js';
 
 export interface ProjectInfo {
   type: ProjectType;
