@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import type { ProjectType } from '@ai-coding-agent/config';
 import { checkDependencies, createDependencyPlan } from './dependencies/index.js';
 export type { DependencyAdapter, DependencyCheckResult, DependencyPlan } from './dependencies/index.js';
+export { getRuntimeAdapter } from './runtimes/index.js';
+export type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './runtimes/index.js';
 
 export interface ProjectInfo {
   type: ProjectType;
@@ -14,10 +16,7 @@ export function detectProjectType(cwd = process.cwd()): ProjectType {
   const packageFile = join(cwd, 'package.json');
   if (!existsSync(packageFile)) return 'unknown';
   try {
-    const pkg = JSON.parse(readFileSync(packageFile, 'utf8')) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
+    const pkg = JSON.parse(readFileSync(packageFile, 'utf8')) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
     if (deps.expo) return 'expo';
     if (deps['react-native']) return 'react-native';
@@ -25,9 +24,7 @@ export function detectProjectType(cwd = process.cwd()): ProjectType {
     if (deps.vue) return 'vue';
     if (deps.react) return 'react';
     if (deps.typescript || deps.node) return 'node';
-  } catch {
-    return 'unknown';
-  }
+  } catch { return 'unknown'; }
   return 'unknown';
 }
 
@@ -40,11 +37,7 @@ export function detectPackageManager(cwd = process.cwd()): ProjectInfo['packageM
 }
 
 export function inspectProject(cwd = process.cwd()): ProjectInfo {
-  return {
-    type: detectProjectType(cwd),
-    packageManager: detectPackageManager(cwd),
-    hasAgentConfig: existsSync(join(cwd, '.aca', 'agent.yaml')),
-  };
+  return { type: detectProjectType(cwd), packageManager: detectPackageManager(cwd), hasAgentConfig: existsSync(join(cwd, '.aca', 'agent.yaml')) };
 }
 
 export { checkDependencies, createDependencyPlan };
