@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
+import type { PermissionsConfig } from './permissions.js';
 
 export type ProjectType = 'auto' | 'vue' | 'react' | 'react-native' | 'expo' | 'nuxt' | 'node' | 'unknown';
 export type DependencyKind = 'skills' | 'mcp' | 'cli';
@@ -35,6 +36,15 @@ export function loadAgentConfig(cwd = process.cwd()): AgentConfig {
   return config;
 }
 
+export function loadPermissions(cwd = process.cwd()): PermissionsConfig | undefined {
+  const path = join(cwd, DEFAULT_AGENT_DIR, 'permissions.yaml');
+  try {
+    return parse(readFileSync(path, 'utf8')) as PermissionsConfig;
+  } catch {
+    return undefined;
+  }
+}
+
 export function resolveDependencies(config: AgentConfig, projectType: ProjectType): ResolvedDependencies {
   const common = config.dependencies?.common ?? {};
   const groups = [common];
@@ -52,3 +62,5 @@ export function resolveDependencies(config: AgentConfig, projectType: ProjectTyp
 function unique(values: string[]): string[] {
   return [...new Set(values)];
 }
+
+export type { PermissionsConfig } from './permissions.js';
