@@ -1,12 +1,39 @@
 name: critical
-
+task_level: CRITICAL
 steps:
-  - grill-me
-  - office-hours
-  - brainstorming
-  - autoplan
-  - writing-plans
-  - test-driven-development
-  - requesting-code-review
-  - verification-before-completion
-  - learn
+  - id: spec
+    skills:
+      - grill-me
+    required: true
+    description: 明确需求、边界、风险和验收标准
+  - id: design
+    skills:
+      - brainstorming
+      - writing-plans
+    required: true
+    description: 设计方案并记录关键决策
+  - id: rollback
+    skills:
+      - writing-plans
+    required: true
+    description: 明确回滚策略和失败处理
+  - id: implement
+    skills:
+      - test-driven-development
+    required: true
+    description: 测试先行实现
+  - id: security
+    skills:
+      - requesting-code-review
+    required: true
+    description: 安全与代码审查
+  - id: verify
+    skills:
+      - verification-before-completion
+    required: true
+    description: 执行全量验证并保留证据
+  - id: learn
+    skills:
+      - learn
+    required: false
+    description: 沉淀经验
