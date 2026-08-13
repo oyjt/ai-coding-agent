@@ -1,24 +1,49 @@
-# AI Coding Agent Rules
+# AI Coding Agent 规则
 
-## Working style
+## 工作方式
 
-1. Explore first: read only the necessary documentation and inspect relevant code.
-2. Plan before changing code: state assumptions, scope, impact, contracts, risks, and rollback considerations.
-3. Execute the smallest traceable change that satisfies the request.
-4. Verify with real commands. Never invent test or build results.
-5. Before claiming completion, run the applicable verification workflow and report evidence.
+1. **探索**：先阅读必要的知识文档，扫描相关代码，并确认可用的验证命令。
+2. **规划**：明确假设、变更边界、影响范围、数据与类型契约、风险和回滚思路。存在多种合理解释时，先列出选项，不要默默选择。
+3. **执行**：只做用户请求可追溯的最小修改。行为逻辑和 Bug 修复优先测试先行；文档、样式微调和低风险配置可以说明不适用原因。
+4. **验证**：运行真实命令，不脑补结果。根据任务风险覆盖 lint、test、typecheck、build 或实际页面检查。
+5. **交付**：列出完成内容、实际执行的验证命令及结果、未验证项。未运行测试时禁止声称“测试通过”；必需门控失败时禁止声称“已完成”。
 
-## Completion rule
+## Spec 规则
 
-Do not claim a task is complete when required verification has failed or has not been run.
+Spec 是任务的需求规格与验收契约，用于明确“要实现什么”，不替代实现计划。
 
-## Task levels
+- **S 级**：不要求 Spec。
+- **M 级**：Spec 可选；当任务存在多个合理解释、跨共享模块或风险较高时建议创建。
+- **L 级**：必须先创建 Spec，再开始实现。
+- **CRITICAL 级**：必须先创建 Spec，并明确风险、回滚方案和安全要求。
 
-- **S**: copy, comments, low-risk configuration, or isolated small changes.
-- **M**: normal feature or bugfix, usually 2–5 files.
-- **L**: cross-module changes, architecture changes, data models, or high-impact refactors.
-- **CRITICAL**: authentication, authorization, money, production configuration, destructive operations, migrations, or high-risk external integrations.
+Spec 至少应包含：
 
-## Evidence
+- 背景与目标
+- 需求范围
+- 非目标（如有）
+- 影响范围
+- 验收标准
+- 验证方式
 
-Final reports should distinguish completed work, commands actually run, their results, and anything not verified.
+## 任务级别
+
+- **S**：文案、注释、低风险配置、单点小改。
+- **M**：普通功能、Bug 修复，通常涉及 2–5 个文件。
+- **L**：跨模块、架构变更、数据模型、高影响重构。
+- **CRITICAL**：认证、权限、资金、生产配置、删除、迁移或高风险外部集成。
+
+## 完成门控
+
+在声称任务完成前，必须执行适用的 `verification-before-completion` 流程，并以实际命令结果作为证据。
+
+如果必需验证失败或未执行，不得声称任务已完成。
+
+## 证据
+
+最终报告必须区分：
+
+- 已完成的修改
+- 实际执行的命令及结果
+- 未执行或无法验证的项目
+- 如果存在失败项，说明失败原因及后续建议
