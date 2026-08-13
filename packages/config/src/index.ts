@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { parse } from 'yaml';
+
 export type ProjectType = 'auto' | 'vue' | 'react' | 'react-native' | 'expo' | 'nuxt' | 'node' | 'unknown';
+export type DependencyKind = 'skills' | 'mcp' | 'cli';
 
 export interface DependencyGroup {
   skills?: string[];
@@ -9,18 +14,38 @@ export interface DependencyGroup {
 export interface AgentConfig {
   version: number;
   project?: { type?: ProjectType };
-  dependencies?: {
-    common?: DependencyGroup;
-    vue?: DependencyGroup;
-    react?: DependencyGroup;
-    'react-native'?: DependencyGroup;
-    expo?: DependencyGroup;
-    nuxt?: DependencyGroup;
-    node?: DependencyGroup;
-  };
+  dependencies?: Record<string, DependencyGroup | undefined>;
   workflow?: { default?: string };
   runtime?: { default?: string };
 }
 
+export interface ResolvedDependencies extends DependencyGroup {
+  projectType: ProjectType;
+}
+
 export const DEFAULT_AGENT_DIR = '.aca';
 export const DEFAULT_CONFIG_FILE = 'agent.yaml';
+
+export function loadAgentConfig(cwd = process.cwd()): AgentConfig {
+  const path = join(cwd, DEFAULT_AGENT_DIR, DEFAULT_CONFIG_FILE);
+  const source = readFileSync(path, 'utf8');
+  const config = parse(source) as AgentConfig;
+  if (!config || typeof config !== 'object') throw new Error(`Invalid Agent config: ${path}`);
+  if (typeof config.version !== 'number') throw new Error(`Missing numeric "version" in ${path}`);
+  return config;
+}
+
+export function resolveDependencies(config: AgentConfig, projectType: ProjectType): ResolvedDependencies {
+  const common = config.dependencies?.common ?? {};
+  const specific = config.dependencies?.[projectType] ?? {};
+  return {
+    projectType,
+    skills: unique([...(common.skills ?? []), ...(specific.skills ?? [])]),
+    mcp: unique([...(common.mcp ?? []), ...(specific.mcp ?? [])]),
+    cli: unique([...(common.cli ?? []), ...(specific.cli ?? [])]),
+  };
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)];
+}
