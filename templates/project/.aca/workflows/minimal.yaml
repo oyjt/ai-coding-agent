@@ -1,0 +1,8 @@
+name: minimal
+task_level: S
+steps:
+  - id: verify
+    skills:
+      - verification-before-completion
+    required: true
+    description: 完成前执行相关验证
