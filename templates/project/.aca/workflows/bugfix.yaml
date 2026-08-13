@@ -1,0 +1,10 @@
+name: bugfix
+
+steps:
+  - grill-me
+  - codegraph
+  - systematic-debugging
+  - test-driven-development
+  - requesting-code-review
+  - verification-before-completion
+  - learn

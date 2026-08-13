@@ -1,0 +1,12 @@
+name: critical
+
+steps:
+  - grill-me
+  - office-hours
+  - brainstorming
+  - autoplan
+  - writing-plans
+  - test-driven-development
+  - requesting-code-review
+  - verification-before-completion
+  - learn

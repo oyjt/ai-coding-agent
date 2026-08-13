@@ -1,0 +1,32 @@
+S:
+  planning: false
+  review: false
+  verification:
+    - lint
+
+M:
+  planning: recommended
+  review: true
+  verification:
+    - lint
+    - test
+    - typecheck
+
+L:
+  planning: required
+  review: true
+  verification:
+    - lint
+    - test
+    - typecheck
+    - build
+
+CRITICAL:
+  planning: required
+  review: required
+  verification:
+    - lint
+    - test
+    - typecheck
+    - build
+    - security-review

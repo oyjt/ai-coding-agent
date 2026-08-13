@@ -1,0 +1,10 @@
+name: feature
+
+steps:
+  - grill-me
+  - writing-plans
+  - test-driven-development
+  - project-skills
+  - requesting-code-review
+  - verification-before-completion
+  - learn

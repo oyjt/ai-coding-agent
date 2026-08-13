@@ -1,0 +1,10 @@
+name: ui
+
+steps:
+  - grill-me
+  - brainstorming
+  - ui-ux-pro-max
+  - project-skills
+  - requesting-code-review
+  - verification-before-completion
+  - learn

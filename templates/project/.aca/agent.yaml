@@ -1,0 +1,33 @@
+version: 1
+
+project:
+  type: auto
+
+dependencies:
+  common:
+    skills:
+      - grill-me
+    mcp:
+      - context7
+      - codegraph
+    cli:
+      - gh
+
+  vue:
+    skills:
+      - vue-best-practices
+      - vueuse-functions
+
+  react:
+    skills:
+      - react-best-practices
+
+  react-native:
+    skills:
+      - react-native-best-practices
+
+workflow:
+  default: feature
+
+runtime:
+  default: claude
