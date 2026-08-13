@@ -9,7 +9,7 @@ import {
   loadAgentConfig,
   resolveDependencies,
 } from '@ai-coding-agent/config';
-import { inspectProject } from '@ai-coding-agent/core';
+import { checkDependencies, createDependencyPlan, inspectProject } from '@ai-coding-agent/core';
 
 const cwd = process.cwd();
 const [command, ...args] = process.argv.slice(2);
@@ -30,7 +30,6 @@ function init(): void {
     process.exitCode = 1;
     return;
   }
-
   mkdirSync(target, { recursive: true });
   cpSync(templateDir(), target, { recursive: true });
   console.log(`Created ${DEFAULT_AGENT_DIR}/`);
@@ -40,22 +39,21 @@ function init(): void {
 function status(): void {
   const project = inspectProject(cwd);
   console.log('ACA status');
-  console.log(`  Project:        ${project.type}`);
+  console.log(`  Project:         ${project.type}`);
   console.log(`  Package manager: ${project.packageManager}`);
-  console.log(`  Config:         ${project.hasAgentConfig ? 'ready' : 'missing'}`);
-
+  console.log(`  Config:          ${project.hasAgentConfig ? 'ready' : 'missing'}`);
   if (!project.hasAgentConfig) return;
   const config = loadAgentConfig(cwd);
   const type = config.project?.type && config.project.type !== 'auto' ? config.project.type : project.type;
   const deps = resolveDependencies(config, type);
-  console.log(`  Workflow:       ${config.workflow?.default ?? 'not configured'}`);
-  console.log(`  Runtime:        ${config.runtime?.default ?? 'not configured'}`);
-  console.log(`  Skills:         ${deps.skills?.join(', ') || 'none'}`);
+  console.log(`  Workflow:        ${config.workflow?.default ?? 'not configured'}`);
+  console.log(`  Runtime:         ${config.runtime?.default ?? 'not configured'}`);
+  console.log(`  Skills:          ${deps.skills?.join(', ') || 'none'}`);
   console.log(`  MCP:             ${deps.mcp?.join(', ') || 'none'}`);
   console.log(`  CLI:             ${deps.cli?.join(', ') || 'none'}`);
 }
 
-function install(): void {
+async function install(): Promise<void> {
   const project = inspectProject(cwd);
   if (!project.hasAgentConfig) {
     console.error(`ACA: ${DEFAULT_AGENT_DIR}/${DEFAULT_CONFIG_FILE} not found. Run "aca init" first.`);
@@ -65,13 +63,34 @@ function install(): void {
 
   const config = loadAgentConfig(cwd);
   const type = config.project?.type && config.project.type !== 'auto' ? config.project.type : project.type;
-  const deps = resolveDependencies(config, type);
+  const dependencies = resolveDependencies(config, type);
+  const plan = createDependencyPlan(dependencies);
+  const results = await checkDependencies(plan, cwd);
 
   console.log(`ACA install (${type})`);
-  printInstallPlan('Skills', deps.skills);
-  printInstallPlan('MCP', deps.mcp);
-  printInstallPlan('CLI', deps.cli);
-  console.log('\nDependency installation adapters are not configured yet; no external packages were changed.');
+  for (const kind of ['skills', 'mcp', 'cli'] as const) {
+    const items = results.filter((result) => result.kind === kind);
+    console.log(`\n${labelFor(kind)}`);
+    if (!items.length) {
+      console.log('  - none');
+      continue;
+    }
+    for (const item of items) {
+      console.log(`  ${item.installed ? '✓' : '✗'} ${item.name}${item.detail ? ` — ${item.detail}` : ''}`);
+    }
+  }
+
+  const missing = results.filter((result) => !result.installed);
+  if (missing.length) {
+    console.log(`\n发现 ${missing.length} 个缺失依赖。当前版本只检查状态，不会自动修改外部环境。`);
+    process.exitCode = 1;
+  } else {
+    console.log('\n所有已声明依赖均已找到。');
+  }
+}
+
+function labelFor(kind: 'skills' | 'mcp' | 'cli'): string {
+  return kind === 'skills' ? 'Skills:' : kind === 'mcp' ? 'MCP:' : 'CLI:';
 }
 
 function doctor(): void {
@@ -80,14 +99,12 @@ function doctor(): void {
     [project.type !== 'unknown', `project type detected: ${project.type}`],
     [project.hasAgentConfig, `${DEFAULT_AGENT_DIR}/${DEFAULT_CONFIG_FILE} exists`],
   ] as const;
-
   console.log('ACA doctor');
   let failed = false;
   for (const [ok, message] of checks) {
     console.log(`  ${ok ? '✓' : '✗'} ${message}`);
     failed ||= !ok;
   }
-
   if (project.hasAgentConfig) {
     try {
       loadAgentConfig(cwd);
@@ -97,7 +114,6 @@ function doctor(): void {
       console.log(`  ✗ agent.yaml: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-
   process.exitCode = failed ? 1 : 0;
 }
 
@@ -107,14 +123,12 @@ function specCreate(name?: string): void {
     process.exitCode = 1;
     return;
   }
-
   const safeName = normalizeSpecName(name);
   if (!safeName) {
     console.error('ACA: Spec 名称只能包含字母、数字、点、下划线和短横线。');
     process.exitCode = 1;
     return;
   }
-
   const directory = specsDir();
   mkdirSync(directory, { recursive: true });
   const target = join(directory, `${safeName}.md`);
@@ -123,7 +137,6 @@ function specCreate(name?: string): void {
     process.exitCode = 1;
     return;
   }
-
   const template = join(templateDir(), 'specs', 'SPEC.md');
   const content = readFileSync(template, 'utf8').replace(/^# 任务规格/m, `# ${safeName}`);
   writeFileSync(target, content, 'utf8');
@@ -135,17 +148,14 @@ function specList(): void {
     console.log('暂无 Spec。');
     return;
   }
-
   const specs = readdirSync(specsDir(), { withFileTypes: true })
     .filter((entry) => entry.isFile() && extname(entry.name) === '.md' && entry.name !== 'SPEC.md')
     .map((entry) => entry.name.slice(0, -3))
     .sort();
-
   if (!specs.length) {
     console.log('暂无 Spec。');
     return;
   }
-
   for (const spec of specs) console.log(spec);
 }
 
@@ -155,21 +165,18 @@ function specShow(name?: string): void {
     process.exitCode = 1;
     return;
   }
-
   const safeName = normalizeSpecName(name);
   if (!safeName) {
     console.error('ACA: Spec 名称无效。');
     process.exitCode = 1;
     return;
   }
-
   const target = join(specsDir(), `${safeName}.md`);
   if (!existsSync(target)) {
     console.error(`ACA: Spec 不存在: ${safeName}`);
     process.exitCode = 1;
     return;
   }
-
   process.stdout.write(readFileSync(target, 'utf8'));
 }
 
@@ -178,47 +185,24 @@ function normalizeSpecName(name: string): string | null {
   return /^[a-zA-Z0-9._-]+$/.test(normalized) ? normalized : null;
 }
 
-function printInstallPlan(label: string, values?: string[]): void {
-  console.log(`  ${label}:`);
-  if (!values?.length) {
-    console.log('    - none');
-    return;
+async function main(): Promise<void> {
+  switch (command) {
+    case 'init': init(); break;
+    case 'install':
+    case 'sync': await install(); break;
+    case 'status': status(); break;
+    case 'doctor': doctor(); break;
+    case 'spec':
+      switch (args[0]) {
+        case 'create': specCreate(args[1]); break;
+        case 'list': specList(); break;
+        case 'show': specShow(args[1]); break;
+        default: console.log('用法: aca spec <create|list|show>'); process.exitCode = 1;
+      }
+      break;
+    default:
+      console.log('Usage: aca <init|install|sync|status|doctor|spec>');
   }
-  for (const value of values) console.log(`    - ${value}`);
 }
 
-switch (command) {
-  case 'init':
-    init();
-    break;
-  case 'install':
-    install();
-    break;
-  case 'sync':
-    install();
-    break;
-  case 'status':
-    status();
-    break;
-  case 'doctor':
-    doctor();
-    break;
-  case 'spec':
-    switch (args[0]) {
-      case 'create':
-        specCreate(args[1]);
-        break;
-      case 'list':
-        specList();
-        break;
-      case 'show':
-        specShow(args[1]);
-        break;
-      default:
-        console.log('用法: aca spec <create|list|show>');
-        process.exitCode = 1;
-    }
-    break;
-  default:
-    console.log('Usage: aca <init|install|sync|status|doctor|spec>');
-}
+await main();
