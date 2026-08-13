@@ -5,13 +5,13 @@ import { classifyTask } from './classifier.js';
 const cases = [
   ['新增 OAuth 登录功能', 'feature', 'CRITICAL'],
   ['增加 RBAC 权限校验', 'feature', 'CRITICAL'],
-  ['接入第三方支付', 'feature', 'CRITICAL'],
+  ['接入第三方支付接口', 'feature', 'CRITICAL'],
   ['执行数据库迁移并删除旧字段', 'unknown', 'CRITICAL'],
   ['重构应用架构', 'refactor', 'L'],
   ['修改跨模块共享状态', 'unknown', 'L'],
   ['调整组件实现', 'unknown', 'L'],
   ['新增用户头像上传功能', 'feature', 'M'],
-  ['修复登录页面按钮异常', 'bugfix', 'CRITICAL'],
+  ['修复登录页面按钮异常', 'bugfix', 'M'],
   ['修改组件逻辑', 'unknown', 'M'],
   ['修改首页文案', 'docs', 'S'],
   ['补充函数注释', 'docs', 'S'],
@@ -39,4 +39,11 @@ test('L requires spec and full verification', () => {
   assert.equal(result.requiresSpec, true);
   assert.equal(result.requiresFullVerification, true);
   assert.equal(result.requiresRollbackPlan, false);
+});
+
+test('UI bug containing 登录 is not automatically CRITICAL', () => {
+  const result = classifyTask({ description: '修复登录页面按钮异常' });
+  assert.equal(result.type, 'bugfix');
+  assert.equal(result.level, 'M');
+  assert.equal(result.requiresSecurityReview, false);
 });
