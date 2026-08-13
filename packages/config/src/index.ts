@@ -37,12 +37,15 @@ export function loadAgentConfig(cwd = process.cwd()): AgentConfig {
 
 export function resolveDependencies(config: AgentConfig, projectType: ProjectType): ResolvedDependencies {
   const common = config.dependencies?.common ?? {};
-  const specific = config.dependencies?.[projectType] ?? {};
+  const groups = [common];
+  if (projectType === 'expo') groups.push(config.dependencies?.['react-native'] ?? {});
+  groups.push(config.dependencies?.[projectType] ?? {});
+
   return {
     projectType,
-    skills: unique([...(common.skills ?? []), ...(specific.skills ?? [])]),
-    mcp: unique([...(common.mcp ?? []), ...(specific.mcp ?? [])]),
-    cli: unique([...(common.cli ?? []), ...(specific.cli ?? [])]),
+    skills: unique(groups.flatMap((group) => group.skills ?? [])),
+    mcp: unique(groups.flatMap((group) => group.mcp ?? [])),
+    cli: unique(groups.flatMap((group) => group.cli ?? [])),
   };
 }
 
