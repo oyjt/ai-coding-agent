@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ProjectType } from '@ai-coding-agent/config';
+import { checkDependencies, createDependencyPlan } from './dependencies/index.js';
+export type { DependencyAdapter, DependencyCheckResult, DependencyPlan } from './dependencies/index.js';
 
 export interface ProjectInfo {
   type: ProjectType;
@@ -44,3 +46,5 @@ export function inspectProject(cwd = process.cwd()): ProjectInfo {
     hasAgentConfig: existsSync(join(cwd, '.aca', 'agent.yaml')),
   };
 }
+
+export { checkDependencies, createDependencyPlan };
