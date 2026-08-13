@@ -10,8 +10,6 @@
 - Codex
 - Gemini
 
-未来可以增加其他 Runtime，但不应改变 `.aca` 核心模型。
-
 ## 2. 分层
 
 ```text
@@ -23,8 +21,6 @@
         ↓            ↓            ↓
      Claude        Codex        Gemini
      Adapter       Adapter       Adapter
-        ↓            ↓            ↓
-   Runtime 配置   Runtime 配置  Runtime 配置
 ```
 
 ## 3. Runtime Adapter 职责
@@ -39,32 +35,55 @@ Adapter 负责：
 
 Adapter 不负责：
 
-- 定义项目任务 Spec
+- 定义任务 Spec
 - 修改通用 Workflow 模型
 - 定义项目类型
 - 保存第三方工具实现
 
-## 4. Claude
+## 4. Claude Adapter
 
-Claude 是第一个优先实现的 Runtime。
+当前已实现 Claude Runtime Adapter。
 
-项目权限配置例如：
+项目通过：
 
-```yaml
-allow:
-  - Bash
-  - Edit
-  - Read
-  - Write
-
-deny:
-  - Bash(rm -rf:*)
-  - Write(.env*)
+```text
+.aca/permissions.yaml
 ```
 
-Adapter 将其转换为 Claude 对应的权限配置。
+定义 Runtime 无关的权限模型：
 
-## 5. Runtime 无关原则
+```yaml
+permissions:
+  allow:
+    - Bash
+    - Read
+    - Write
+  deny:
+    - 'Bash(rm -rf:*)'
+    - 'Write(.env*)'
+```
+
+执行：
+
+```bash
+aca sync
+```
+
+会生成或更新：
+
+```text
+.claude/settings.json
+```
+
+已有 `settings.json` 的其他顶层字段会保留，ACA 只更新 `permissions`。
+
+## 5. 默认权限
+
+`aca init` 会创建默认权限模板。默认允许常见 Agent 工具，并禁止高风险命令和 `.env` 写入。
+
+默认配置集中在 `@ai-coding-agent/config`，Runtime Adapter 不重复维护默认值。
+
+## 6. Runtime 无关原则
 
 不要出现：
 
@@ -77,14 +96,12 @@ if claude then 修改 AgentConfig 模型
 ```text
 AgentConfig
     ↓
-ClaudeAdapter
+Runtime Adapter
     ↓
-Claude 配置
+Claude / Codex / Gemini 配置
 ```
 
-## 6. 同步
-
-目标命令：
+## 7. 同步
 
 ```bash
 aca sync
@@ -95,9 +112,9 @@ aca sync
 ```text
 读取 .aca
   ↓
-解析配置
+读取 Runtime
   ↓
-检测 Runtime
+读取通用权限
   ↓
 选择 Adapter
   ↓
@@ -105,3 +122,7 @@ aca sync
 ```
 
 同步应该尽可能可重复执行，并避免覆盖用户明确管理的非 ACA 配置。
+
+## 8. 当前边界
+
+当前 `aca sync` 只同步 Runtime 配置，第三方 Skill / MCP / CLI 仍由 `aca install` 检查，不自动安装。
