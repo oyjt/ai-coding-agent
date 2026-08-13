@@ -1,0 +1,39 @@
+name: large-change
+task_level: L
+steps:
+  - id: review
+    skills:
+      - office-hours
+    required: true
+    description: 评估范围、影响和风险
+  - id: design
+    skills:
+      - brainstorming
+      - writing-plans
+    required: true
+    description: 形成设计和实施计划
+  - id: plan
+    skills:
+      - autoplan
+    required: true
+    description: 分解任务并明确执行顺序
+  - id: implement
+    skills:
+      - test-driven-development
+    required: true
+    description: 测试先行实现行为逻辑
+  - id: review-code
+    skills:
+      - requesting-code-review
+    required: true
+    description: 代码审查
+  - id: verify
+    skills:
+      - verification-before-completion
+    required: true
+    description: 全量验证
+  - id: learn
+    skills:
+      - learn
+    required: false
+    description: 沉淀经验
