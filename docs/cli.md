@@ -26,7 +26,7 @@ aca install
 aca sync
 ```
 
-读取 `.aca` 配置并同步到当前 Runtime。具体行为由 Runtime Adapter 决定。
+当前版本暂时复用 `install` 的依赖计划逻辑。完整 Runtime 同步由后续 Adapter 实现。
 
 ## 查看状态
 
@@ -55,15 +55,41 @@ aca doctor
 
 ## Spec
 
-规划中的命令：
+### 创建
 
 ```bash
 aca spec create <name>
+```
+
+创建：
+
+```text
+.aca/specs/<name>.md
+```
+
+内容基于项目模板 `SPEC.md`。名称只允许字母、数字、`.`、`_`、`-`，并且不会覆盖已有 Spec。
+
+例如：
+
+```bash
+aca spec create add-login
+```
+
+### 列出
+
+```bash
 aca spec list
+```
+
+列出 `.aca/specs/` 中已经创建的 Spec，不显示模板 `SPEC.md`。
+
+### 查看
+
+```bash
 aca spec show <name>
 ```
 
-用于管理 L / CRITICAL 任务，以及需要显式需求契约的 M 级任务。
+输出指定 Spec 内容。
 
 ## CLI 设计原则
 
