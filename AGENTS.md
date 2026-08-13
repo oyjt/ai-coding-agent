@@ -148,6 +148,9 @@ pnpm build
 - `aca init`
 - `aca status`
 - `aca doctor`
+- `aca spec create <name>`
+- `aca spec list`
+- `aca spec show <name>`
 - Spec 模板
 - S / M / L / CRITICAL 任务分级
 - 基础 CI 配置
@@ -155,18 +158,17 @@ pnpm build
 ### 部分实现
 
 - `aca install`：目前主要完成依赖解析/安装计划，第三方实际安装器仍待完善。
-- `aca sync`：命令入口已规划，Runtime 同步能力待完善。
+- `aca sync`：当前复用 install 的安装计划逻辑，Runtime 同步能力待完善。
 - Runtime Adapter：尚未完整实现。
 
 ### 后续方向
 
 优先完善：
 
-1. `aca spec create/list/show`
-2. Skill / MCP / CLI 安装机制
-3. Claude Runtime Adapter
-4. `aca sync`
-5. 其他 Runtime Adapter
+1. Skill / MCP / CLI 安装机制
+2. Claude Runtime Adapter
+3. `aca sync`
+4. 其他 Runtime Adapter
 
 ## 文档导航
 
