@@ -36,6 +36,16 @@ export const claudeRuntime: RuntimeAdapter = {
       files.push(planTarget);
     }
 
+    if (context.capabilities) {
+      const capabilitiesTarget = join(targetDir, 'capabilities.json');
+      writeFileSync(
+        capabilitiesTarget,
+        `${JSON.stringify(context.capabilities, null, 2)}\n`,
+        'utf8',
+      );
+      files.push(capabilitiesTarget);
+    }
+
     return { runtime: 'claude', files };
   },
 };
