@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -23,6 +23,7 @@ function plan(): AgentPlan {
       name: 'test',
       taskLevel: 'S',
       steps: [],
+      context: { taskLevel: 'S', taskType: 'feature', projectType: 'node' },
     },
     dependencies: { projectType: 'node', skills: [], mcp: [], cli: [] },
     skills: [],
@@ -42,7 +43,6 @@ test('prepareAgent blocks when a required capability is unavailable', async () =
 
 test('prepareAgent does not install capabilities unless explicitly requested', async () => {
   const cwd = mkdtempSync(join(tmpdir(), 'aca-prepare-'));
-  writeFileSync(join(cwd, 'package.json'), '{}');
   const result = await prepareAgent(plan(), { cwd, install: false });
   assert.equal(result.ready, false);
   assert.equal(result.installation, undefined);
