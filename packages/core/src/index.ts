@@ -8,6 +8,8 @@ export { installDependency } from './dependencies/installer.js';
 export type { DependencyInstallResult } from './dependencies/installer.js';
 export { getRuntimeAdapter } from './runtimes/index.js';
 export type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './runtimes/index.js';
+export { createVerificationPlan, runVerification } from './verification/index.js';
+export type { VerificationCommand, VerificationPlan, VerificationResult } from './verification/index.js';
 export * from './workflows/index.js';
 export * from './tasks/index.js';
 export * from './agent/index.js';
