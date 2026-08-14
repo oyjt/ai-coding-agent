@@ -6,6 +6,8 @@ export type { DependencyAdapter, DependencyCheckResult, DependencyPlan } from '.
 export { findDependencyInstallSpec, listDependencyInstallSpecs } from './dependencies/catalog.js';
 export { installDependency } from './dependencies/installer.js';
 export type { DependencyInstallResult } from './dependencies/installer.js';
+export { resolveCapabilities, inspectCapabilities } from './capabilities/index.js';
+export type { CapabilityRequirement, CapabilityStatus } from './capabilities/index.js';
 export { getRuntimeAdapter } from './runtimes/index.js';
 export type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './runtimes/index.js';
 export { createVerificationPlan, runVerification, verify, createVerificationEvidence } from './verification/index.js';
