@@ -22,4 +22,6 @@ jobs:
       - run: pnpm build
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
+      - run: pnpm --filter @ai-coding-agent/config test
+      - run: pnpm --filter @ai-coding-agent/core test
+      - run: pnpm --filter @ai-coding-agent/cli test
