@@ -29,7 +29,7 @@ export function classifyTask(input: TaskInput): TaskClassification {
   if (critical.length) level = 'CRITICAL';
   else if (matchedRules.length || (input.filesChanged ?? 0) > 5) level = 'L';
   else if ((input.filesChanged ?? 0) > 1) level = 'M';
-  else if (type === 'feature' || type === 'bugfix' || type === 'refactor') level = 'M';
+  else if (type === 'feature' || type === 'bugfix' || type === 'refactor' || type === 'unknown') level = 'M';
   else level = 'S';
 
   const relevantRules = level === 'CRITICAL' ? critical : matchedRules.filter((rule) => rule.level === level);
@@ -54,6 +54,6 @@ function inferTaskType(description: string): TaskType {
   if (/配置|config|环境变量|构建配置/i.test(description)) return 'config';
   if (/修复|bug|错误|异常|故障|fix/i.test(description)) return 'bugfix';
   if (/重构|refactor|优化代码|cleanup/i.test(description)) return 'refactor';
-  if (/新增|增加|实现|开发|支持|添加|feature/i.test(description)) return 'feature';
+  if (/新增|增加|实现|开发|支持|添加|接入|feature/i.test(description)) return 'feature';
   return 'unknown';
 }
