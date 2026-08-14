@@ -13,6 +13,8 @@ export type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './runtim
 export { createVerificationPlan, runVerification, verify, createVerificationEvidence } from './verification/index.js';
 export type { VerificationCommand, VerificationPlan, VerificationResult, VerificationEvidence } from './verification/index.js';
 export { writeVerificationEvidence, VERIFICATION_FILE } from './verification/artifact.js';
+export { prepareAgent } from './agent/prepare.js';
+export type { AgentPreparationOptions, AgentPreparationResult } from './agent/prepare.js';
 export * from './workflows/index.js';
 export * from './tasks/index.js';
 export * from './agent/index.js';
