@@ -1,10 +1,34 @@
 name: bugfix
-
+task_level: M
 steps:
-  - grill-me
-  - codegraph
-  - systematic-debugging
-  - test-driven-development
-  - requesting-code-review
-  - verification-before-completion
-  - learn
+  - id: review
+    skills:
+      - grill-me
+    required: true
+    description: 明确复现条件、影响范围和验收标准
+  - id: locate
+    skills:
+      - codegraph
+      - systematic-debugging
+    required: true
+    description: 定位根因并验证假设
+  - id: implement
+    skills:
+      - test-driven-development
+    required: true
+    description: 先补回归测试再修复
+  - id: review-code
+    skills:
+      - requesting-code-review
+    required: true
+    description: 代码审查
+  - id: verify
+    skills:
+      - verification-before-completion
+    required: true
+    description: 完成前执行验证并保留证据
+  - id: learn
+    skills:
+      - learn
+    required: false
+    description: 沉淀本次经验
