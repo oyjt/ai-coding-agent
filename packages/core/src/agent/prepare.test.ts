@@ -14,6 +14,7 @@ function plan(): AgentPlan {
       level: 'S',
       type: 'feature',
       reasons: [],
+      matchedRules: [],
       requiresSpec: false,
       requiresRollbackPlan: false,
       requiresSecurityReview: false,
