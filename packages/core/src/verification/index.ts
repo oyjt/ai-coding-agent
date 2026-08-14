@@ -1,10 +1,12 @@
 import { execFile } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 import type { ProjectType } from '@ai-coding-agent/config';
 import type { TaskLevel } from '../workflows/types.js';
 
 const execFileAsync = promisify(execFile);
+type PackageManager = 'pnpm' | 'yarn' | 'npm' | 'bun' | 'unknown';
 
 export interface VerificationCommand {
   id: 'lint' | 'test' | 'typecheck' | 'build';
@@ -17,7 +19,7 @@ export interface VerificationCommand {
 export interface VerificationPlan {
   taskLevel: TaskLevel;
   projectType: ProjectType;
-  packageManager: 'pnpm' | 'yarn' | 'npm' | 'bun' | 'unknown';
+  packageManager: PackageManager;
   commands: VerificationCommand[];
   manualGates: string[];
 }
@@ -34,47 +36,22 @@ interface PackageJson {
   scripts?: Record<string, string>;
 }
 
-export function createVerificationPlan(options: {
-  cwd: string;
-  taskLevel: TaskLevel;
-  projectType: ProjectType;
-  packageManager: VerificationPlan['packageManager'];
-}): VerificationPlan {
+export function createVerificationPlan(options: { cwd: string; taskLevel: TaskLevel; projectType: ProjectType }): VerificationPlan {
   const scripts = readScripts(options.cwd);
-  const ids: VerificationCommand['id'][] = options.taskLevel === 'S'
-    ? ['lint']
-    : ['lint', 'test', 'typecheck'];
+  const packageManager = detectPackageManager(options.cwd);
+  const ids: VerificationCommand['id'][] = options.taskLevel === 'S' ? ['lint'] : ['lint', 'test', 'typecheck'];
   if (options.taskLevel === 'L' || options.taskLevel === 'CRITICAL') ids.push('build');
-
-  const commands = ids
-    .filter((id) => Boolean(scripts[id]))
-    .map((id) => ({
-      id,
-      ...toCommand(options.packageManager, id),
-      required: true,
-      reason: reasonFor(id, options.taskLevel),
-    }));
-
+  const commands = ids.filter((id) => Boolean(scripts[id])).map((id) => ({ id, ...toCommand(packageManager, id), required: true, reason: reasonFor(id, options.taskLevel) }));
   const missing = ids.filter((id) => !scripts[id]);
   const manualGates: string[] = [];
   if (options.taskLevel === 'L' || options.taskLevel === 'CRITICAL') manualGates.push('完成影响范围与回滚方案审查');
   if (options.taskLevel === 'CRITICAL') manualGates.push('完成安全审查');
   if (missing.length) manualGates.push(`项目未提供脚本: ${missing.join(', ')}`);
-
-  return {
-    taskLevel: options.taskLevel,
-    projectType: options.projectType,
-    packageManager: options.packageManager,
-    commands,
-    manualGates,
-  };
+  return { taskLevel: options.taskLevel, projectType: options.projectType, packageManager, commands, manualGates };
 }
 
 export async function runVerification(plan: VerificationPlan, cwd: string, execute = true): Promise<VerificationResult[]> {
-  if (!execute) {
-    return plan.commands.map((command) => ({ id: command.id, passed: false, skipped: true, output: `${command.command} ${command.args.join(' ')}` }));
-  }
-
+  if (!execute) return plan.commands.map((command) => ({ id: command.id, passed: false, skipped: true, output: `${command.command} ${command.args.join(' ')}` }));
   const results: VerificationResult[] = [];
   for (const command of plan.commands) {
     try {
@@ -82,13 +59,7 @@ export async function runVerification(plan: VerificationPlan, cwd: string, execu
       results.push({ id: command.id, passed: true, skipped: false, output: `${result.stdout}${result.stderr}`.trim() });
     } catch (error) {
       const value = error as { stdout?: string; stderr?: string; message?: string };
-      results.push({
-        id: command.id,
-        passed: false,
-        skipped: false,
-        output: `${value.stdout ?? ''}${value.stderr ?? ''}`.trim(),
-        error: value.message ?? String(error),
-      });
+      results.push({ id: command.id, passed: false, skipped: false, output: `${value.stdout ?? ''}${value.stderr ?? ''}`.trim(), error: value.message ?? String(error) });
       break;
     }
   }
@@ -97,15 +68,23 @@ export async function runVerification(plan: VerificationPlan, cwd: string, execu
 
 function readScripts(cwd: string): Record<string, string> {
   try {
-    const packageJson = JSON.parse(readFileSync(`${cwd}/package.json`, 'utf8')) as PackageJson;
+    const packageJson = JSON.parse(readFileSync(join(cwd, 'package.json'), 'utf8')) as PackageJson;
     return packageJson.scripts ?? {};
   } catch {
     return {};
   }
 }
 
-function toCommand(packageManager: VerificationPlan['packageManager'], id: VerificationCommand['id']): Pick<VerificationCommand, 'command' | 'args'> {
-  const commands: Record<VerificationPlan['packageManager'], { command: string; args: string[] }> = {
+function detectPackageManager(cwd: string): PackageManager {
+  if (existsSync(join(cwd, 'pnpm-lock.yaml'))) return 'pnpm';
+  if (existsSync(join(cwd, 'yarn.lock'))) return 'yarn';
+  if (existsSync(join(cwd, 'bun.lockb')) || existsSync(join(cwd, 'bun.lock'))) return 'bun';
+  if (existsSync(join(cwd, 'package-lock.json'))) return 'npm';
+  return 'unknown';
+}
+
+function toCommand(packageManager: PackageManager, id: VerificationCommand['id']): Pick<VerificationCommand, 'command' | 'args'> {
+  const commands: Record<PackageManager, { command: string; args: string[] }> = {
     pnpm: { command: 'pnpm', args: ['run', id] },
     yarn: { command: 'yarn', args: [id] },
     npm: { command: 'npm', args: ['run', id] },
