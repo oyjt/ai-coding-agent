@@ -18,7 +18,7 @@ test('claude runtime syncs permissions and agent plan', async () => {
         requiresSpec: false, requiresRollbackPlan: false,
         requiresSecurityReview: false, requiresFullVerification: true,
       },
-      workflow: { name: 'feature', taskLevel: 'M', taskType: 'bugfix', steps: [] },
+      workflow: { name: 'feature', taskLevel: 'M', taskType: 'bugfix', steps: [], context: { taskLevel: 'M', taskType: 'bugfix', projectType: 'react' } },
       dependencies: { projectType: 'react', skills: ['grill-me'], mcp: ['context7'], cli: ['gh'] },
       skills: ['grill-me'],
       verification: { spec: false, rollbackPlan: false, securityReview: false, fullVerification: true },
