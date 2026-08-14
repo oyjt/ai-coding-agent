@@ -6,7 +6,6 @@ test('catalog provides explicit install recipes for supported dependencies', () 
   assert.equal(findDependencyInstallSpec('mcp', 'context7')?.commands[0]?.command, 'claude');
   assert.equal(findDependencyInstallSpec('skills', 'superpowers')?.commands[0]?.command, 'claude');
   assert.equal(findDependencyInstallSpec('skills', 'gstack')?.commands[0]?.command, 'git');
-  assert.equal(findDependencyInstallSpec('skills', 'gstack')?.commands[1]?.args, undefined);
   assert.deepEqual(findDependencyInstallSpec('skills', 'gstack')?.commands[1]?.args, ['setup', '--host', 'claude', '--no-prefix']);
 });
 
