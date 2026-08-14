@@ -12,6 +12,7 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@ai-coding-agent/config": "workspace:*"
+    "@ai-coding-agent/config": "workspace:*",
+    "yaml": "^2.8.1"
   }
 }
