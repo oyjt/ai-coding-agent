@@ -1,10 +1,34 @@
 name: ui
-
+task_level: M
 steps:
-  - grill-me
-  - brainstorming
-  - ui-ux-pro-max
-  - project-skills
-  - requesting-code-review
-  - verification-before-completion
-  - learn
+  - id: review
+    skills:
+      - grill-me
+    required: true
+    description: 明确 UI 目标、范围和验收标准
+  - id: design
+    skills:
+      - brainstorming
+      - ui-ux-pro-max
+    required: true
+    description: 形成交互和视觉实现方案
+  - id: implement
+    skills:
+      - project-skills
+    required: true
+    description: 使用项目类型对应的前端技能实现
+  - id: review-code
+    skills:
+      - requesting-code-review
+    required: true
+    description: 代码审查
+  - id: verify
+    skills:
+      - verification-before-completion
+    required: true
+    description: 完成前执行验证并保留证据
+  - id: learn
+    skills:
+      - learn
+    required: false
+    description: 沉淀本次经验
