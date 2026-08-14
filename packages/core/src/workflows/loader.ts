@@ -4,6 +4,8 @@ import { parse } from 'yaml';
 import type { WorkflowDefinition } from './types.js';
 
 type RawWorkflow = Omit<WorkflowDefinition, 'taskLevel' | 'taskType'> & {
+  taskLevel?: WorkflowDefinition['taskLevel'];
+  taskType?: WorkflowDefinition['taskType'];
   task_level?: WorkflowDefinition['taskLevel'];
   task_type?: WorkflowDefinition['taskType'];
 };
