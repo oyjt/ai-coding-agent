@@ -7,6 +7,13 @@ import { claudeRuntime } from './claude.js';
 
 test('claude runtime syncs permissions and agent plan', async () => {
   const cwd = await mkdtemp(join(tmpdir(), 'aca-claude-'));
+  const verificationPlan = {
+    taskLevel: 'M' as const,
+    projectType: 'react' as const,
+    packageManager: 'pnpm' as const,
+    commands: [{ id: 'lint' as const, command: 'pnpm', args: ['run', 'lint'], required: true, reason: '检查代码质量与静态规则。' }],
+    manualGates: [],
+  };
   const result = await claudeRuntime.sync({
     cwd,
     permissions: { permissions: { allow: ['Read'], deny: ['Bash(rm -rf:*)'] } },
@@ -22,6 +29,7 @@ test('claude runtime syncs permissions and agent plan', async () => {
       dependencies: { projectType: 'react', skills: ['grill-me'], mcp: ['context7'], cli: ['gh'] },
       skills: ['grill-me'],
       verification: { spec: false, rollbackPlan: false, securityReview: false, fullVerification: true },
+      verificationPlan,
     },
   });
 
@@ -31,4 +39,5 @@ test('claude runtime syncs permissions and agent plan', async () => {
   assert.deepEqual(settings.permissions, { allow: ['Read'], deny: ['Bash(rm -rf:*)'] });
   assert.equal(plan.taskLevel, 'M');
   assert.deepEqual(plan.skills, ['grill-me']);
+  assert.deepEqual(plan.verificationPlan, verificationPlan);
 });
