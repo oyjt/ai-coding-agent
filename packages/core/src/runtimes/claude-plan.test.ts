@@ -16,7 +16,7 @@ test('toClaudeAgentPlan converts an AgentPlan to a stable runtime payload', () =
       requiresSecurityReview: true,
       requiresFullVerification: true,
     },
-    workflow: { name: 'critical', taskLevel: 'CRITICAL', taskType: 'feature', steps: [] },
+    workflow: { name: 'critical', taskLevel: 'CRITICAL', taskType: 'feature', steps: [], context: { taskLevel: 'CRITICAL', taskType: 'feature', projectType: 'react' } },
     dependencies: { projectType: 'react', skills: ['grill-me'], mcp: ['context7'], cli: ['gh'] },
     skills: ['grill-me'],
     verification: { spec: true, rollbackPlan: true, securityReview: true, fullVerification: true },
