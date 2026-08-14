@@ -1,6 +1,7 @@
 import type { ProjectType, ResolvedDependencies } from '@ai-coding-agent/config';
 import type { TaskClassification } from '../tasks/types.js';
 import type { ResolvedWorkflow } from '../workflows/types.js';
+import type { VerificationPlan } from '../verification/index.js';
 
 export interface AgentPlan {
   description: string;
@@ -10,6 +11,7 @@ export interface AgentPlan {
   dependencies: ResolvedDependencies;
   skills: string[];
   verification: VerificationGates;
+  verificationPlan: VerificationPlan;
 }
 
 export interface VerificationGates {
