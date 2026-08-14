@@ -56,7 +56,7 @@ function dedupe(items: CapabilityRequirement[]): CapabilityRequirement[] {
   for (const item of items) {
     const key = `${item.kind}:${item.name}`;
     const previous = map.get(key);
-    if (!previous || previous.source !== 'workflow' && item.source === 'workflow') map.set(key, item);
+    if (!previous || (previous.source !== 'workflow' && item.source === 'workflow')) map.set(key, item);
   }
   return [...map.values()];
 }
@@ -65,4 +65,6 @@ export { getCapabilityReadiness } from './readiness.js';
 export type { CapabilityReadiness } from './readiness.js';
 export { createCapabilityInstallPlan, installMissingCapabilities } from './installer.js';
 export type { CapabilityInstallPlan, CapabilityInstallReport } from './installer.js';
+export { createCapabilityContext } from './context.js';
+export type { CapabilityContext, AvailableCapability } from './context.js';
 export type { CapabilityRequirement, CapabilityStatus } from './types.js';
