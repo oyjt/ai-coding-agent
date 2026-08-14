@@ -10,6 +10,7 @@ export { getRuntimeAdapter } from './runtimes/index.js';
 export type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './runtimes/index.js';
 export { createVerificationPlan, runVerification, verify, createVerificationEvidence } from './verification/index.js';
 export type { VerificationCommand, VerificationPlan, VerificationResult, VerificationEvidence } from './verification/index.js';
+export { writeVerificationEvidence, VERIFICATION_FILE } from './verification/artifact.js';
 export * from './workflows/index.js';
 export * from './tasks/index.js';
 export * from './agent/index.js';
