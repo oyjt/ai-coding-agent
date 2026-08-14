@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadPermissions, type PermissionsConfig } from '@ai-coding-agent/config';
 import type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './types.js';
+import { toClaudeAgentPlan } from './claude-plan.js';
 
 interface ClaudeSettings {
   permissions: {
@@ -27,7 +28,15 @@ export const claudeRuntime: RuntimeAdapter = {
     };
 
     writeFileSync(target, `${JSON.stringify({ ...existing, ...settings }, null, 2)}\n`, 'utf8');
-    return { runtime: 'claude', files: [target] };
+    const files = [target];
+
+    if (context.plan) {
+      const planTarget = join(targetDir, 'agent-plan.json');
+      writeFileSync(planTarget, `${JSON.stringify(toClaudeAgentPlan(context.plan), null, 2)}\n`, 'utf8');
+      files.push(planTarget);
+    }
+
+    return { runtime: 'claude', files };
   },
 };
 
