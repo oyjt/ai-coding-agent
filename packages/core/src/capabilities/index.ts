@@ -61,4 +61,6 @@ function dedupe(items: CapabilityRequirement[]): CapabilityRequirement[] {
   return [...map.values()];
 }
 
+export { getCapabilityReadiness } from './readiness.js';
+export type { CapabilityReadiness } from './readiness.js';
 export type { CapabilityRequirement, CapabilityStatus } from './types.js';
