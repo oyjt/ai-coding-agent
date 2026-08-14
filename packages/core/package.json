@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "pnpm build && node --test dist",
+    "test": "pnpm build && node --test dist/project.test.js dist/dependencies/index.test.js dist/tasks/classifier.test.js dist/workflows/loader.test.js dist/workflows/resolver.test.js",
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
