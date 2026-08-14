@@ -1,11 +1,44 @@
 name: feature
-description: 新功能开发工作流
-
+task_level: M
 steps:
-  - grill-me
-  - writing-plans
-  - test-driven-development
-  - project-skills
-  - requesting-code-review
-  - verification-before-completion
-  - learn
+  - id: review
+    skills:
+      - grill-me
+    required: true
+    description: 澄清需求、范围和验收标准
+  - id: design
+    skills:
+      - brainstorming
+      - writing-plans
+    required: true
+    description: 形成设计和实施计划
+  - id: plan
+    skills:
+      - autoplan
+    required: true
+    description: 分解任务并明确执行顺序
+  - id: implement
+    skills:
+      - test-driven-development
+    required: true
+    description: 测试先行实现行为逻辑
+  - id: project-skills
+    skills:
+      - project-skills
+    required: false
+    description: 使用项目类型对应的开发技能
+  - id: review-code
+    skills:
+      - requesting-code-review
+    required: true
+    description: 代码审查
+  - id: verify
+    skills:
+      - verification-before-completion
+    required: true
+    description: 完成前执行验证并保留证据
+  - id: learn
+    skills:
+      - learn
+    required: false
+    description: 沉淀本次经验
