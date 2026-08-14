@@ -2,7 +2,7 @@
 
 项目级 AI Coding Agent 配置与开发工作流工具。
 
-项目定位保持简单：使用项目内的 `.aca/` 描述 Agent 需要遵循的规则、工作流、Skill、MCP、CLI 和任务规格，再由 `aca` CLI 负责初始化、同步和检查。
+项目定位保持简单：使用项目内的 `.aca/` 描述 Agent 需要遵循的规则、工作流、Skill、MCP、CLI 和任务规格，再由 `aca` CLI 负责初始化、检查、安装、同步和准备 Runtime。
 
 ## 核心概念
 
@@ -38,6 +38,16 @@
 
 `agent.yaml` 可以把依赖分为 `common` 和项目类型组。Expo 会自动继承 `react-native` 组，再叠加 `expo` 组；重复的 Skill、MCP 和 CLI 名称会自动去重。
 
+默认模板中的通用开发依赖包括：
+
+```text
+Skills: grill-me / superpowers / gstack
+MCP:    context7 / codegraph
+CLI:    gh
+```
+
+项目类型再叠加对应 Skill，例如 Vue、React、React Native。
+
 ```yaml
 version: 1
 
@@ -48,6 +58,8 @@ dependencies:
   common:
     skills:
       - grill-me
+      - superpowers
+      - gstack
     mcp:
       - context7
       - codegraph
@@ -58,17 +70,27 @@ dependencies:
     skills:
       - vue-best-practices
       - vueuse-functions
-
-  react:
-    skills:
-      - react-best-practices
-
-  react-native:
-    skills:
-      - react-native-best-practices
 ```
 
-`aca install` 当前是**依赖检查命令**：它根据项目类型解析依赖并报告 Skill、MCP、CLI 是否已经存在，不会未经用户确认修改全局环境。实际第三方工具的安装由对应 Runtime 或工具自身的安装方式负责。
+### 依赖安装模型
+
+仓库只声明需要什么，不把第三方 Skill、MCP、CLI 复制进项目。安装器只允许执行内置 Catalog 中明确声明的命令，不接受配置文件中的任意 shell 命令。
+
+```bash
+# 只检查并显示可执行命令，不修改环境
+aca install
+
+# 明确确认后才执行内置安装命令
+aca install --execute
+```
+
+当前内置安装器：
+
+- `context7`：通过 Claude Code 项目级 MCP 配置安装。
+- `superpowers`：通过 Claude Code 官方 Plugin Marketplace 安装。
+- `gstack`：克隆到项目 `.claude/skills/gstack` 后执行官方 Claude setup。gstack 官方当前更推荐 team mode；项目本地安装主要用于 ACA 的项目级依赖模型。
+
+`gh`、`codegraph` 等没有内置安装器时，`aca install` 只报告缺失，不执行未知安装命令；可由开发环境或项目规范自行安装。
 
 ## 任务分级
 
@@ -121,10 +143,13 @@ aca init
 aca status
 aca doctor
 aca install
+aca install --execute
 aca sync
 aca workflow list
 aca workflow show feature
 aca task check "新增 OAuth 登录功能"
+aca task plan "新增 OAuth 登录功能"
+aca task prepare "新增 OAuth 登录功能"
 aca spec create oauth-login
 aca spec list
 aca spec show oauth-login
@@ -148,7 +173,9 @@ Required Skills
 Verification Gates
 ```
 
-项目类型 Skill 会自动展开到 Workflow 的 `project-skills` 占位步骤中。例如 Vue 项目的功能任务会把 `vue-best-practices`、`vueuse-functions` 纳入 Required Skills。
+`aca task plan` 在此基础上生成完整 Agent Plan，包含项目依赖、Skills、MCP、CLI、Workflow 和验证门禁。
+
+`aca task prepare` 会把 Agent Plan 交给当前 Runtime Adapter。Claude Runtime 会生成 `.claude/agent-plan.json`，供后续 Agent 会话消费。
 
 ## 开发
 
@@ -168,5 +195,6 @@ CI 使用 `pnpm install --frozen-lockfile`，并依次执行 lint、typecheck、
 2. **简单优先**：不引入复杂的 Registry、Policy Engine 或 Agent Server。
 3. **Runtime 无关**：`.aca` 描述项目需求，不绑定 Claude、Codex 或 Gemini 的配置格式。
 4. **第三方依赖声明与项目配置分离**：仓库只声明需要什么，不把第三方 Skill、MCP、CLI 的实现复制进项目。
-5. **规则优先**：任务分级首先使用确定性规则，避免模型误判高风险任务。
-6. **真实验证**：Agent 只能报告实际执行过的验证结果。
+5. **安装命令白名单化**：只有内置 Catalog 中明确声明的安装步骤可以被 `--execute` 执行。
+6. **规则优先**：任务分级首先使用确定性规则，避免模型误判高风险任务。
+7. **真实验证**：Agent 只能报告实际执行过的验证结果。
