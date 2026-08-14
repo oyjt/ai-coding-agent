@@ -5,11 +5,18 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { detectPackageManager, detectProjectType, inspectProject } from './index.js';
 
-async function withProject(packageJson, callback) {
+type PackageJson = {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+};
+
+type ProjectCallback = (cwd: string) => Promise<void>;
+
+async function withProject(packageJson: PackageJson, callback: ProjectCallback): Promise<void> {
   const cwd = await mkdtemp(join(tmpdir(), 'aca-project-'));
   try {
     await writeFile(join(cwd, 'package.json'), JSON.stringify(packageJson), 'utf8');
-    return await callback(cwd);
+    await callback(cwd);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
