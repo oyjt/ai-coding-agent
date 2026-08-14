@@ -1,8 +1,10 @@
 import type { AgentPlan } from './types.js';
 import {
+  createCapabilityContext,
   getCapabilityReadiness,
   installMissingCapabilities,
   inspectCapabilities,
+  type CapabilityContext,
   type CapabilityInstallReport,
   type CapabilityReadiness,
 } from '../capabilities/index.js';
@@ -15,6 +17,7 @@ export interface AgentPreparationOptions {
 export interface AgentPreparationResult {
   plan: AgentPlan;
   readiness: CapabilityReadiness;
+  capabilityContext: CapabilityContext;
   installation?: CapabilityInstallReport;
   ready: boolean;
   blockers: string[];
@@ -40,13 +43,13 @@ export async function prepareAgent(
     readiness = getCapabilityReadiness(statuses);
   }
 
-  const blockers = readiness.blockers.map(
-    (item) => `${item.kind}:${item.name} — ${item.detail ?? '未就绪'}`,
-  );
+  const capabilityContext = createCapabilityContext(statuses);
+  const blockers = capabilityContext.blockers;
 
   return {
     plan,
     readiness,
+    capabilityContext,
     installation,
     ready: readiness.ready,
     blockers,
