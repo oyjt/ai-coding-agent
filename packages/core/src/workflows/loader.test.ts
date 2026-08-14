@@ -16,17 +16,29 @@ async function withWorkflow(source: string, callback: (cwd: string) => Promise<v
   }
 }
 
-test('loadWorkflow normalizes a single skill step', async () => {
+test('loadWorkflow normalizes snake_case workflow metadata and a single skill', async () => {
   await withWorkflow(
     'name: feature\ntask_level: M\nsteps:\n  - id: verify\n    skill: verification-before-completion\n',
     async (cwd) => {
       const workflow = loadWorkflow('feature', cwd);
+      assert.equal(workflow.taskLevel, 'M');
       assert.deepEqual(workflow.steps[0], {
         id: 'verify',
         skill: 'verification-before-completion',
         skills: ['verification-before-completion'],
         required: true,
       });
+    },
+  );
+});
+
+test('loadWorkflow accepts camelCase metadata', async () => {
+  await withWorkflow(
+    'name: feature\ntaskLevel: M\ntaskType: feature\nsteps:\n  - id: verify\n    skills: [verify]\n',
+    async (cwd) => {
+      const workflow = loadWorkflow('feature', cwd);
+      assert.equal(workflow.taskLevel, 'M');
+      assert.equal(workflow.taskType, 'feature');
     },
   );
 });
