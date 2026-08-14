@@ -2,7 +2,7 @@
 
 项目级 AI Coding Agent 配置与开发工作流工具。
 
-项目定位是保持简单：使用项目内的 `.aca/` 描述 Agent 需要遵循的规则、工作流、Skill、MCP、CLI 和任务规格，再由 `aca` CLI 负责初始化、同步和检查。
+项目定位保持简单：使用项目内的 `.aca/` 描述 Agent 需要遵循的规则、工作流、Skill、MCP、CLI 和任务规格，再由 `aca` CLI 负责初始化、同步和检查。
 
 ## 核心概念
 
@@ -18,12 +18,57 @@
 
 | 配置 | 作用 |
 | --- | --- |
-| `agent.yaml` | 定义项目类型、依赖和默认 Runtime |
-| `permissions.yaml` | 定义 Agent 可使用和禁止使用的能力 |
-| `workflows/` | 定义 Agent 如何完成不同类型的任务 |
+| `agent.yaml` | 定义项目类型、通用依赖、项目类型依赖和默认 Runtime |
+| `permissions.yaml` | 定义 Agent 可使用和禁止使用的 Runtime 能力 |
+| `workflows/` | 定义 Agent 如何完成不同等级的任务 |
 | `rules/` | 定义编码、验证和交付规范 |
-| `skills/` | 放置项目自有 Skill |
+| `skills/` | 放置项目自有 Skill；第三方 Skill 不复制进仓库 |
 | `specs/` | 描述具体任务要实现什么，以及如何验收 |
+
+## 项目类型与依赖
+
+`aca` 会根据项目 `package.json` 自动识别常见类型：
+
+- Expo
+- React Native
+- Nuxt
+- Vue
+- React
+- Node
+
+`agent.yaml` 可以把依赖分为 `common` 和项目类型组。Expo 会自动继承 `react-native` 组，再叠加 `expo` 组；重复的 Skill、MCP 和 CLI 名称会自动去重。
+
+```yaml
+version: 1
+
+project:
+  type: auto
+
+dependencies:
+  common:
+    skills:
+      - grill-me
+    mcp:
+      - context7
+      - codegraph
+    cli:
+      - gh
+
+  vue:
+    skills:
+      - vue-best-practices
+      - vueuse-functions
+
+  react:
+    skills:
+      - react-best-practices
+
+  react-native:
+    skills:
+      - react-native-best-practices
+```
+
+`aca install` 当前是**依赖检查命令**：它根据项目类型解析依赖并报告 Skill、MCP、CLI 是否已经存在，不会未经用户确认修改全局环境。实际第三方工具的安装由对应 Runtime 或工具自身的安装方式负责。
 
 ## 任务分级
 
@@ -69,44 +114,59 @@ Verification
 验收
 ```
 
-## 快速开始
+## CLI
 
 ```bash
 aca init
 aca status
 aca doctor
 aca install
+aca sync
+aca workflow list
+aca workflow show feature
+aca task check "新增 OAuth 登录功能"
+aca spec create oauth-login
+aca spec list
+aca spec show oauth-login
 ```
 
 `aca init` 会在当前项目创建 `.aca/`，不会覆盖已有配置。
 
-## 项目类型
+`aca task check` 会自动完成：
 
-CLI 会根据项目依赖自动识别常见项目类型：
+```text
+任务描述
+  ↓
+任务类型
+  ↓
+S / M / L / CRITICAL
+  ↓
+Workflow
+  ↓
+Required Skills
+  ↓
+Verification Gates
+```
 
-- Vue
-- Nuxt
-- React
-- React Native
-- Expo
-- Node
-
-通用依赖与项目类型依赖可以在 `agent.yaml` 中分别声明。
+项目类型 Skill 会自动展开到 Workflow 的 `project-skills` 占位步骤中。例如 Vue 项目的功能任务会把 `vue-best-practices`、`vueuse-functions` 纳入 Required Skills。
 
 ## 开发
 
 ```bash
 pnpm install
-pnpm build
+pnpm lint
 pnpm typecheck
 pnpm test
-pnpm lint
+pnpm build
 ```
+
+CI 使用 `pnpm install --frozen-lockfile`，并依次执行 lint、typecheck、test、build。
 
 ## 设计原则
 
 1. **项目优先**：配置放在项目内，随代码一起版本管理。
 2. **简单优先**：不引入复杂的 Registry、Policy Engine 或 Agent Server。
 3. **Runtime 无关**：`.aca` 描述项目需求，不绑定 Claude、Codex 或 Gemini 的配置格式。
-4. **第三方可安装**：第三方 Skill、MCP、CLI 不直接复制进项目仓库，由安装/同步机制管理。
-5. **真实验证**：Agent 只能报告实际执行过的验证结果。
+4. **第三方依赖声明与项目配置分离**：仓库只声明需要什么，不把第三方 Skill、MCP、CLI 的实现复制进项目。
+5. **规则优先**：任务分级首先使用确定性规则，避免模型误判高风险任务。
+6. **真实验证**：Agent 只能报告实际执行过的验证结果。
