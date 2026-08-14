@@ -1,5 +1,7 @@
 import type { ResolvedDependencies } from '@ai-coding-agent/config';
 import { dependencyAdapters } from './adapters.js';
+import { findDependencyInstallSpec, listDependencyInstallSpecs } from './catalog.js';
+import { installDependency } from './installer.js';
 import type { DependencyCheckResult, DependencyPlan } from './types.js';
 
 export function createDependencyPlan(dependencies: ResolvedDependencies): DependencyPlan {
@@ -30,4 +32,6 @@ export async function checkDependencies(
   return results;
 }
 
+export { findDependencyInstallSpec, listDependencyInstallSpecs, installDependency };
+export type { DependencyInstallResult } from './installer.js';
 export type { DependencyAdapter, DependencyCheckResult, DependencyPlan } from './types.js';
