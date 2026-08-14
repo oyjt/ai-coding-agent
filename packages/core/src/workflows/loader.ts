@@ -8,6 +8,7 @@ type RawWorkflow = Omit<WorkflowDefinition, 'taskLevel' | 'taskType'> & {
   taskType?: WorkflowDefinition['taskType'];
   task_level?: WorkflowDefinition['taskLevel'];
   task_type?: WorkflowDefinition['taskType'];
+  description?: string;
 };
 
 export function loadWorkflow(name: string, cwd = process.cwd()): WorkflowDefinition {
