@@ -7,6 +7,8 @@ dependencies:
   common:
     skills:
       - grill-me
+      - superpowers
+      - gstack
     mcp:
       - context7
       - codegraph
