@@ -26,10 +26,13 @@ function normalizeWorkflow(workflow: WorkflowDefinition): WorkflowDefinition {
   }
   return {
     ...workflow,
-    steps: workflow.steps.map((step) => ({
-      ...step,
-      skills: step.skills ?? (step as typeof step & { skill?: string }).skill ? [(step as typeof step & { skill?: string }).skill!] : [],
-      required: step.required !== false,
-    })),
+    steps: workflow.steps.map((step) => {
+      const skill = (step as typeof step & { skill?: string }).skill;
+      return {
+        ...step,
+        skills: step.skills ?? (skill ? [skill] : []),
+        required: step.required !== false,
+      };
+    }),
   };
 }
