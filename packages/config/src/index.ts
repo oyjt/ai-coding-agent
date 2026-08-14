@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
+import { DEFAULT_PERMISSIONS, normalizePermissions } from './permissions.js';
 import type { PermissionsConfig } from './permissions.js';
 
 export type ProjectType = 'auto' | 'vue' | 'react' | 'react-native' | 'expo' | 'nuxt' | 'node' | 'unknown';
@@ -63,4 +64,5 @@ function unique(values: string[]): string[] {
   return [...new Set(values)];
 }
 
+export { DEFAULT_PERMISSIONS, normalizePermissions } from './permissions.js';
 export type { PermissionsConfig } from './permissions.js';
