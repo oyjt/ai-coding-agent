@@ -63,4 +63,6 @@ function dedupe(items: CapabilityRequirement[]): CapabilityRequirement[] {
 
 export { getCapabilityReadiness } from './readiness.js';
 export type { CapabilityReadiness } from './readiness.js';
+export { createCapabilityInstallPlan, installMissingCapabilities } from './installer.js';
+export type { CapabilityInstallPlan, CapabilityInstallReport } from './installer.js';
 export type { CapabilityRequirement, CapabilityStatus } from './types.js';
