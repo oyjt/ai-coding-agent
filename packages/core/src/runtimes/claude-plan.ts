@@ -11,6 +11,7 @@ export interface ClaudeAgentPlan {
   mcp: string[];
   cli: string[];
   verification: AgentPlan['verification'];
+  verificationPlan: AgentPlan['verificationPlan'];
 }
 
 export function toClaudeAgentPlan(plan: AgentPlan): ClaudeAgentPlan {
@@ -25,5 +26,6 @@ export function toClaudeAgentPlan(plan: AgentPlan): ClaudeAgentPlan {
     mcp: plan.dependencies.mcp ?? [],
     cli: plan.dependencies.cli ?? [],
     verification: plan.verification,
+    verificationPlan: plan.verificationPlan,
   };
 }
