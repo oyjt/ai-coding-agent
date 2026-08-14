@@ -32,6 +32,15 @@ export interface VerificationResult {
   error?: string;
 }
 
+export interface VerificationEvidence {
+  startedAt: string;
+  completedAt: string;
+  results: VerificationResult[];
+  passed: boolean;
+  canComplete: boolean;
+  blockers: string[];
+}
+
 interface PackageJson {
   scripts?: Record<string, string>;
 }
@@ -64,6 +73,26 @@ export async function runVerification(plan: VerificationPlan, cwd: string, execu
     }
   }
   return results;
+}
+
+export function createVerificationEvidence(plan: VerificationPlan, results: VerificationResult[], startedAt: string, completedAt: string): VerificationEvidence {
+  const required = new Set(plan.commands.filter((command) => command.required).map((command) => command.id));
+  const passedIds = new Set(results.filter((result) => result.passed).map((result) => result.id));
+  const blockers = plan.manualGates.slice();
+  for (const id of required) {
+    const result = results.find((item) => item.id === id);
+    if (!result) blockers.push(`验证未执行: ${id}`);
+    else if (!result.passed) blockers.push(`验证失败: ${id}`);
+  }
+  const passed = required.size === passedIds.size && blockers.length === 0;
+  return { startedAt, completedAt, results, passed, canComplete: passed, blockers };
+}
+
+export async function verify(plan: VerificationPlan, cwd: string, execute = true): Promise<VerificationEvidence> {
+  const startedAt = new Date().toISOString();
+  const results = await runVerification(plan, cwd, execute);
+  const completedAt = new Date().toISOString();
+  return createVerificationEvidence(plan, results, startedAt, completedAt);
 }
 
 function readScripts(cwd: string): Record<string, string> {
