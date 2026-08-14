@@ -33,7 +33,6 @@ export async function installDependency(
     try {
       await execFileAsync(item.command, item.args, {
         cwd: item.cwd ? `${cwd}/${item.cwd}` : cwd,
-        stdio: 'inherit',
       });
     } catch (error) {
       return {
