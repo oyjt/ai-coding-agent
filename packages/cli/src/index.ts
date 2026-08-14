@@ -22,8 +22,6 @@ import {
   listWorkflows,
   loadWorkflow,
   resolveWorkflow,
-  type TaskLevel,
-  type TaskType,
   type WorkflowContext,
 } from '@ai-coding-agent/core';
 
@@ -44,7 +42,5 @@ function specCreate(name?: string): void { if (!name) { console.error('用法: a
 function specList(): void { if (!existsSync(specsDir())) { console.log('暂无 Spec。'); return; } const specs = readdirSync(specsDir(), { withFileTypes: true }).filter((entry) => entry.isFile() && extname(entry.name) === '.md' && entry.name !== 'SPEC.md').map((entry) => entry.name.slice(0, -3)).sort(); if (!specs.length) { console.log('暂无 Spec。'); return; } for (const spec of specs) console.log(spec); }
 function specShow(name?: string): void { if (!name) { console.error('用法: aca spec show <name>'); process.exitCode = 1; return; } const safeName = normalizeSpecName(name); if (!safeName) { console.error('ACA: Spec 名称无效。'); process.exitCode = 1; return; } const target = join(specsDir(), `${safeName}.md`); if (!existsSync(target)) { console.error(`ACA: Spec 不存在: ${safeName}`); process.exitCode = 1; return; } process.stdout.write(readFileSync(target, 'utf8')); }
 function normalizeSpecName(name: string): string | null { const normalized = name.trim().replace(/\.md$/i, ''); return /^[a-zA-Z0-9._-]+$/.test(normalized) ? normalized : null; }
-function isTaskLevel(value?: string): value is TaskLevel { return value === 'S' || value === 'M' || value === 'L' || value === 'CRITICAL'; }
-function isTaskType(value?: string): value is TaskType { return value === 'feature' || value === 'bugfix' || value === 'refactor' || value === 'docs' || value === 'config' || value === 'unknown'; }
 async function main(): Promise<void> { switch (command) { case 'init': init(); break; case 'install': await install(); break; case 'sync': await syncRuntime(); break; case 'status': status(); break; case 'doctor': await doctor(); break; case 'workflow': switch (args[0]) { case 'list': workflowList(); break; case 'show': workflowShow(args[1]); break; default: console.log('用法: aca workflow <list|show>'); process.exitCode = 1; } break; case 'task': if (args[0] === 'check') taskCheck(args.slice(1).join(' ')); else { console.log('用法: aca task check <任务描述>'); process.exitCode = 1; } break; case 'spec': switch (args[0]) { case 'create': specCreate(args[1]); break; case 'list': specList(); break; case 'show': specShow(args[1]); break; default: console.log('用法: aca spec <create|list|show>'); process.exitCode = 1; } break; default: console.log('Usage: aca <init|install|sync|status|doctor|workflow|task|spec>'); } }
 await main();
