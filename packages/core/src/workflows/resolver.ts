@@ -41,6 +41,9 @@ export function isCriticalTask(context: WorkflowContext): boolean {
   return context.taskLevel === 'CRITICAL';
 }
 
-export function getRequiredSkills(workflow: WorkflowDefinition): string[] {
-  return [...new Set(workflow.steps.filter((step) => step.required).flatMap((step) => step.skills))];
+export function getRequiredSkills(workflow: WorkflowDefinition, projectSkills: string[] = []): string[] {
+  const skills = workflow.steps
+    .filter((step) => step.required)
+    .flatMap((step) => step.skills.flatMap((skill) => skill === 'project-skills' ? projectSkills : [skill]));
+  return [...new Set(skills)];
 }
