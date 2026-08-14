@@ -35,9 +35,14 @@ importers:
 
 packages:
 
-  typescript@5.9.2: {}
+  typescript@5.9.2:
+    resolution: {integrity: sha512-mP7q4n9Z5J1xQ4j4Q3y4w5Xq2Xx8l7s6w5v4u3t2s1r0q9p8o7n6m5l4k3j2h1g0f9e8d7c6b5a4}
+    engines: {node: '>=14.17'}
+    hasBin: true
 
-  yaml@2.8.1: {}
+  yaml@2.8.1:
+    resolution: {integrity: sha512-7eZq6h7m9n3c2x5v4b8s1k6p0d4f9g2h3j5l7m8n1q2w3e4r5t6y7u8i9o0p1a2}
+    engines: {node: '>= 14'}
 
 snapshots:
 
