@@ -2,6 +2,7 @@ import type { AgentConfig, ProjectType, ResolvedDependencies } from '@ai-coding-
 import { resolveDependencies } from '@ai-coding-agent/config';
 import { classifyTask, type TaskInput } from '../tasks/index.js';
 import { getRequiredSkills, resolveWorkflow } from '../workflows/index.js';
+import { createVerificationPlan } from '../verification/index.js';
 import type { AgentPlan, VerificationGates } from './types.js';
 
 export function createAgentPlan(
@@ -26,6 +27,7 @@ export function createAgentPlan(
   const dependencies = resolveDependencies(options.config, options.projectType);
   const skills = getRequiredSkills(workflow, dependencies.skills ?? []);
   const verification = getVerificationGates(classification);
+  const verificationPlan = createVerificationPlan({ cwd, taskLevel: classification.level, projectType: options.projectType });
 
   return {
     description,
@@ -35,6 +37,7 @@ export function createAgentPlan(
     dependencies,
     skills,
     verification,
+    verificationPlan,
   };
 }
 
