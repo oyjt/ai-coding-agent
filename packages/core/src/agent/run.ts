@@ -17,14 +17,15 @@ export interface AgentRunResult {
 }
 
 /**
- * Run a prepared agent task and, by default, verify the resulting workspace.
+ * Run a prepared agent task and verify the resulting workspace by default.
  * Completion is only true when execution succeeds and verification passes.
  */
 export async function runAgent(plan: AgentPlan, options: AgentRunOptions): Promise<AgentRunResult> {
+  const shouldVerify = options.verify !== false;
   const execution = await executeAgent(plan, options);
 
-  if (!options.verify || execution.exitCode !== 0) {
-    return { execution, completed: execution.exitCode === 0 && options.verify === false };
+  if (!shouldVerify || execution.exitCode !== 0) {
+    return { execution, completed: !shouldVerify && execution.exitCode === 0 };
   }
 
   const evidence = await verify(plan.verificationPlan, options.cwd, true);
