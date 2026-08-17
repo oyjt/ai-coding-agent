@@ -9,9 +9,19 @@ export interface RuntimeContext {
   capabilities?: CapabilityContext;
 }
 
+export interface RuntimeExecutionContext extends RuntimeContext {
+  prompt: string;
+}
+
+export interface RuntimeExecutionResult {
+  exitCode: number;
+  output: string;
+}
+
 export interface RuntimeAdapter {
   readonly name: string;
   sync(context: RuntimeContext): Promise<RuntimeSyncResult>;
+  execute?(context: RuntimeExecutionContext): Promise<RuntimeExecutionResult>;
 }
 
 export interface RuntimeSyncResult {
