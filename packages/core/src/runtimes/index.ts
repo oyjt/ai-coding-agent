@@ -1,4 +1,10 @@
-export type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './types.js';
+export type {
+  RuntimeAdapter,
+  RuntimeContext,
+  RuntimeExecutionContext,
+  RuntimeExecutionResult,
+  RuntimeSyncResult,
+} from './types.js';
 export { claudeRuntime } from './claude.js';
 
 import { claudeRuntime } from './claude.js';
