@@ -3,6 +3,7 @@ import type { AgentExecutionOptions, AgentExecutionResult } from './execute.js';
 import { executeAgent } from './execute.js';
 import { verify, type VerificationEvidence } from '../verification/index.js';
 import { writeVerificationEvidence } from '../verification/artifact.js';
+import { writeAgentExecutionEvidence } from './artifact.js';
 
 export interface AgentRunOptions extends Omit<AgentExecutionOptions, 'plan'> {
   plan: AgentPlan;
@@ -25,15 +26,19 @@ export async function runAgent(plan: AgentPlan, options: AgentRunOptions): Promi
   const execution = await executeAgent(plan, options);
 
   if (!shouldVerify || execution.exitCode !== 0) {
-    return { execution, completed: !shouldVerify && execution.exitCode === 0 };
+    const result = { execution, completed: !shouldVerify && execution.exitCode === 0 };
+    if (options.writeEvidence !== false) await writeAgentExecutionEvidence(options.cwd, result);
+    return result;
   }
 
   const evidence = await verify(plan.verificationPlan, options.cwd, true);
   if (options.writeEvidence !== false) writeVerificationEvidence(options.cwd, evidence);
 
-  return {
+  const result = {
     execution,
     verification: evidence,
     completed: execution.exitCode === 0 && evidence.canComplete,
   };
+  if (options.writeEvidence !== false) await writeAgentExecutionEvidence(options.cwd, result);
+  return result;
 }
