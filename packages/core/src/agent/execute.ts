@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { PermissionsConfig } from '@ai-coding-agent/config';
 import type { AgentPlan } from './types.js';
 import type { RuntimeAdapter } from '../runtimes/types.js';
 import type { AgentPreparationResult } from './prepare.js';
@@ -7,6 +8,7 @@ import type { AgentPreparationResult } from './prepare.js';
 export interface AgentExecutionOptions {
   cwd: string;
   runtime: RuntimeAdapter;
+  permissions: PermissionsConfig;
   preparation: AgentPreparationResult;
   prompt?: string;
 }
@@ -49,7 +51,7 @@ export async function executeAgent(
 
   const result = await options.runtime.execute({
     cwd: options.cwd,
-    permissions: { permissions: { allow: [], deny: [] } },
+    permissions: options.permissions,
     plan,
     capabilities: options.preparation.capabilityContext,
     prompt,
