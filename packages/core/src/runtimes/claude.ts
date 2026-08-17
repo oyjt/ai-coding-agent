@@ -1,8 +1,12 @@
+import { execFile } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { loadPermissions, type PermissionsConfig } from '@ai-coding-agent/config';
-import type { RuntimeAdapter, RuntimeContext, RuntimeSyncResult } from './types.js';
+import type { RuntimeAdapter, RuntimeContext, RuntimeExecutionContext, RuntimeExecutionResult, RuntimeSyncResult } from './types.js';
 import { toClaudeAgentPlan } from './claude-plan.js';
+
+const execFileAsync = promisify(execFile);
 
 interface ClaudeSettings {
   permissions: {
@@ -98,11 +102,7 @@ export const claudeRuntime: RuntimeAdapter = {
 
     if (context.capabilities) {
       const capabilitiesTarget = join(targetDir, 'capabilities.json');
-      writeFileSync(
-        capabilitiesTarget,
-        `${JSON.stringify(context.capabilities, null, 2)}\n`,
-        'utf8',
-      );
+      writeFileSync(capabilitiesTarget, `${JSON.stringify(context.capabilities, null, 2)}\n`, 'utf8');
       files.push(capabilitiesTarget);
     }
 
@@ -113,6 +113,24 @@ export const claudeRuntime: RuntimeAdapter = {
     }
 
     return { runtime: 'claude', files };
+  },
+  async execute(context: RuntimeExecutionContext): Promise<RuntimeExecutionResult> {
+    const command = process.env.ACA_CLAUDE_BIN || 'claude';
+    try {
+      const result = await execFileAsync(command, ['-p', context.prompt], {
+        cwd: context.cwd,
+        maxBuffer: 10 * 1024 * 1024,
+        windowsHide: true,
+      });
+      return { exitCode: 0, output: `${result.stdout}${result.stderr}` };
+    } catch (error) {
+      const result = error as { code?: number | string; stdout?: string; stderr?: string; message?: string };
+      const exitCode = typeof result.code === 'number' ? result.code : 1;
+      return {
+        exitCode,
+        output: `${result.stdout ?? ''}${result.stderr ?? ''}${result.message ?? ''}`,
+      };
+    }
   },
 };
 
