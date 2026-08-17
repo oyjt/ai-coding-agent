@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { claudeRuntime } from './claude.js';
 
-test('claude runtime syncs permissions and agent plan', async () => {
+test('claude runtime syncs permissions, agent plan, and context', async () => {
   const cwd = await mkdtemp(join(tmpdir(), 'aca-claude-'));
   const verificationPlan = {
     taskLevel: 'M' as const,
@@ -32,13 +32,25 @@ test('claude runtime syncs permissions and agent plan', async () => {
       verification: { spec: false, rollbackPlan: false, securityReview: false, fullVerification: true },
       verificationPlan,
     },
+    capabilities: {
+      ready: true,
+      capabilities: [{ kind: 'skills', name: 'grill-me', source: 'workflow', required: true }],
+      blockers: [],
+    },
   });
 
-  assert.equal(result.files.length, 2);
+  assert.equal(result.files.length, 4);
   const settings = JSON.parse(await readFile(join(cwd, '.claude', 'settings.json'), 'utf8'));
   const plan = JSON.parse(await readFile(join(cwd, '.claude', 'agent-plan.json'), 'utf8'));
+  const capabilities = JSON.parse(await readFile(join(cwd, '.claude', 'capabilities.json'), 'utf8'));
+  const context = await readFile(join(cwd, '.claude', 'agent-context.md'), 'utf8');
   assert.deepEqual(settings.permissions, { allow: ['Read'], deny: ['Bash(rm -rf:*)'] });
   assert.equal(plan.taskLevel, 'M');
   assert.deepEqual(plan.skills, ['grill-me']);
   assert.deepEqual(plan.verificationPlan, verificationPlan);
+  assert.deepEqual(capabilities.capabilities[0], { kind: 'skills', name: 'grill-me', source: 'workflow', required: true });
+  assert.match(context, /# ACA Agent Context/);
+  assert.match(context, /修复登录页面按钮异常/);
+  assert.match(context, /任务级别：M/);
+  assert.match(context, /声称完成前必须执行真实验证/);
 });
