@@ -5,6 +5,7 @@ import { verify, type VerificationEvidence } from '../verification/index.js';
 import { writeVerificationEvidence } from '../verification/artifact.js';
 import { writeAgentExecutionEvidence } from './artifact.js';
 import { writeAgentAttemptEvidence, type AgentAttemptStatus } from './attempt.js';
+import { hasValidAgentApproval } from './approval.js';
 
 export interface AgentRunOptions extends Omit<AgentExecutionOptions, 'plan'> {
   plan: AgentPlan;
@@ -34,7 +35,11 @@ export async function runAgent(plan: AgentPlan, options: AgentRunOptions): Promi
   let lastExecution: AgentExecutionResult | undefined;
   let lastVerification: VerificationEvidence | undefined;
 
-  if (plan.approval.required && !options.confirmed) {
+  if (plan.classification.level === 'CRITICAL') {
+    if (!await hasValidAgentApproval(options.cwd, plan)) {
+      throw new Error('CRITICAL agent execution requires a valid approval artifact. Run `aca task approve <task>` first.');
+    }
+  } else if (plan.approval.required && !options.confirmed) {
     throw new Error('Agent execution requires explicit confirmation. Re-run with --confirm.');
   }
 
