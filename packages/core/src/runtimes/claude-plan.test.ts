@@ -29,6 +29,7 @@ test('toClaudeAgentPlan converts an AgentPlan to a stable runtime payload', () =
     capabilities: [],
     verification: { spec: true, rollbackPlan: true, securityReview: true, fullVerification: true },
     verificationPlan,
+    approval: { required: true, confirmed: false, status: 'required' },
   });
 
   assert.deepEqual(result.verificationPlan, verificationPlan);
