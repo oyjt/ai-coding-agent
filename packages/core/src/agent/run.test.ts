@@ -79,12 +79,15 @@ test('runAgent repairs once after verification failure and completes', async () 
   const cwd = await mkdtemp(join(tmpdir(), 'acai-run-'));
   await writeFile(join(cwd, 'package.json'), '{}');
   const plan = createPlan();
-  plan.verificationPlan.commands[0].args = ['-e', 'process.exit(1)'];
+  const marker = join(cwd, '.verification-repaired');
+  plan.verificationPlan.commands[0].args = [
+    '-e',
+    `const fs=require('node:fs');if(fs.existsSync(${JSON.stringify(marker)}))process.exit(0);fs.writeFileSync(${JSON.stringify(marker)},'1');process.exit(1)`,
+  ];
   let executions = 0;
   const options = createOptions(cwd, plan);
   options.runtime.execute = async () => {
     executions += 1;
-    if (executions === 1) plan.verificationPlan.commands[0].args = ['-e', 'process.exit(0)'];
     return { exitCode: 0, output: executions === 1 ? 'initial' : 'repaired' };
   };
 
