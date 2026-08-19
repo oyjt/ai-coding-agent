@@ -31,6 +31,7 @@ function plan(): AgentPlan {
     capabilities: [{ kind: 'skills', name: 'missing-skill', source: 'workflow', required: true }],
     verification: { spec: false, rollbackPlan: false, securityReview: false, fullVerification: false },
     verificationPlan: { taskLevel: 'S', projectType: 'node', packageManager: 'unknown', commands: [], manualGates: [] },
+    approval: { required: false, confirmed: false, status: 'not_required' },
   };
 }
 
