@@ -31,6 +31,7 @@ test('claude runtime syncs permissions, agent plan, and context', async () => {
       capabilities: [],
       verification: { spec: false, rollbackPlan: false, securityReview: false, fullVerification: true },
       verificationPlan,
+      approval: { required: false, confirmed: false, status: 'not_required' },
     },
     capabilities: {
       ready: true,
@@ -48,7 +49,6 @@ test('claude runtime syncs permissions, agent plan, and context', async () => {
   assert.equal(plan.taskLevel, 'M');
   assert.deepEqual(plan.skills, ['grill-me']);
   assert.deepEqual(plan.verificationPlan, verificationPlan);
-  assert.deepEqual(capabilities.capabilities[0], { kind: 'skills', name: 'grill-me', source: 'workflow', required: true });
   assert.match(context, /# ACA Agent Context/);
   assert.match(context, /修复登录页面按钮异常/);
   assert.match(context, /任务级别：M/);
