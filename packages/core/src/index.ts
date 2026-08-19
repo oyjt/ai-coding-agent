@@ -19,6 +19,7 @@ export type { AgentPreparationOptions, AgentPreparationResult, AgentExecutionOpt
 export * from './workflows/index.js';
 export * from './tasks/index.js';
 export * from './agent/index.js';
+export * from './workspace/index.js';
 
 export interface ProjectInfo {
   type: ProjectType;
