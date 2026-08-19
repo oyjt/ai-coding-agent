@@ -29,42 +29,70 @@ function parseMaxAttempts(raw: string | undefined): number | undefined {
   return value;
 }
 
-async function runTask(description: string): Promise<void> {
+function hasFlag(name: string): boolean {
+  return args.includes(name);
+}
+
+async function createTaskContext(description: string, install: boolean) {
   const cwd = process.cwd();
-  const install = args.includes('--install');
+  const project = inspectProject(cwd);
+  if (!project.hasAgentConfig) {
+    throw new Error(`${DEFAULT_AGENT_DIR}/${DEFAULT_CONFIG_FILE} not found. Run "aca init" first.`);
+  }
+
+  const config = loadAgentConfig(cwd);
+  const plan = createAgentPlan(description, {
+    projectType: project.type,
+    config,
+    cwd,
+  });
+  const runtimeName = config.runtime?.default ?? 'claude';
+  const runtime = getRuntimeAdapter(runtimeName);
+  if (!runtime) throw new Error(`Unsupported runtime: ${runtimeName}`);
+  const preparation = await prepareAgent(plan, { cwd, install });
+  const permissions = normalizePermissions(loadPermissions(cwd) ?? DEFAULT_PERMISSIONS);
+
+  return { cwd, plan, runtime, runtimeName, preparation, permissions };
+}
+
+async function runTask(description: string): Promise<void> {
+  const install = hasFlag('--install');
+  const dryRun = hasFlag('--dry-run');
   const maxAttemptsIndex = args.indexOf('--max-attempts');
   const maxAttempts = parseMaxAttempts(maxAttemptsIndex >= 0 ? args[maxAttemptsIndex + 1] : undefined);
   const task = description
     .replace(/(^|\s)--install(?=\s|$)/g, ' ')
+    .replace(/(^|\s)--dry-run(?=\s|$)/g, ' ')
     .replace(/(^|\s)--max-attempts\s+\d+(?=\s|$)/g, ' ')
     .trim();
 
   if (!task) {
-    console.error('用法: aca task run <任务描述> [--install] [--max-attempts <1-10>]');
-    process.exitCode = 1;
-    return;
-  }
-
-  const project = inspectProject(cwd);
-  if (!project.hasAgentConfig) {
-    console.error(`ACA: ${DEFAULT_AGENT_DIR}/${DEFAULT_CONFIG_FILE} not found. Run "aca init" first.`);
+    console.error('用法: aca task run <任务描述> [--install] [--dry-run] [--max-attempts <1-10>]');
     process.exitCode = 1;
     return;
   }
 
   try {
-    const config = loadAgentConfig(cwd);
-    const plan = createAgentPlan(task, {
-      projectType: project.type,
-      config,
-      cwd,
-    });
-    const runtimeName = config.runtime?.default ?? 'claude';
-    const runtime = getRuntimeAdapter(runtimeName);
-    if (!runtime) throw new Error(`Unsupported runtime: ${runtimeName}`);
+    const { cwd, plan, runtime, runtimeName, preparation, permissions } = await createTaskContext(task, install);
 
-    const preparation = await prepareAgent(plan, { cwd, install });
-    const permissions = normalizePermissions(loadPermissions(cwd) ?? DEFAULT_PERMISSIONS);
+    if (dryRun) {
+      console.log('ACA task dry-run');
+      console.log(`  Task:         ${plan.description}`);
+      console.log(`  Level:        ${plan.classification.level}`);
+      console.log(`  Type:         ${plan.classification.type}`);
+      console.log(`  Workflow:     ${plan.workflow.name}`);
+      console.log(`  Runtime:      ${runtimeName}`);
+      console.log(`  Ready:        ${preparation.ready ? 'yes' : 'no'}`);
+      console.log(`  Max attempts: ${maxAttempts ?? 3}`);
+      console.log(`  Skills:       ${plan.skills.length}`);
+      console.log(`  MCP:          ${plan.dependencies.mcp?.length ?? 0}`);
+      console.log(`  CLI:          ${plan.dependencies.cli?.length ?? 0}`);
+      if (preparation.blockers.length) {
+        console.log('  Blockers:');
+        for (const blocker of preparation.blockers) console.log(`    - ${blocker}`);
+      }
+      return;
+    }
 
     if (!preparation.ready) {
       console.error('ACA task run');
