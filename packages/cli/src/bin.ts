@@ -19,13 +19,27 @@ import { join } from 'node:path';
 
 const args = process.argv.slice(2);
 
+function parseMaxAttempts(raw: string | undefined): number | undefined {
+  if (raw === undefined) return undefined;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1 || value > 10) {
+    throw new Error('--max-attempts must be an integer between 1 and 10');
+  }
+  return value;
+}
+
 async function runTask(description: string): Promise<void> {
   const cwd = process.cwd();
   const install = args.includes('--install');
-  const task = description.replace(/(^|\s)--install(?=\s|$)/g, ' ').trim();
+  const maxAttemptsIndex = args.indexOf('--max-attempts');
+  const maxAttempts = parseMaxAttempts(maxAttemptsIndex >= 0 ? args[maxAttemptsIndex + 1] : undefined);
+  const task = description
+    .replace(/(^|\s)--install(?=\s|$)/g, ' ')
+    .replace(/(^|\s)--max-attempts\s+\d+(?=\s|$)/g, ' ')
+    .trim();
 
   if (!task) {
-    console.error('用法: aca task run <任务描述> [--install]');
+    console.error('用法: aca task run <任务描述> [--install] [--max-attempts <1-10>]');
     process.exitCode = 1;
     return;
   }
@@ -72,6 +86,7 @@ async function runTask(description: string): Promise<void> {
       runtime,
       permissions,
       preparation,
+      maxAttempts,
     });
 
     console.log('ACA task run');
@@ -79,6 +94,8 @@ async function runTask(description: string): Promise<void> {
     console.log(`  Level:        ${plan.classification.level}`);
     console.log(`  Workflow:     ${plan.workflow.name}`);
     console.log(`  Runtime:      ${runtimeName}`);
+    console.log(`  Attempts:     ${result.attempts}`);
+    console.log(`  Status:       ${result.status}`);
     console.log(`  Execution:    ${result.execution.passed ? 'passed' : 'failed'}`);
     if (result.verification) console.log(`  Verification: ${result.verification.canComplete ? 'passed' : 'failed'}`);
     console.log(`  Completed:    ${result.completed ? 'yes' : 'no'}`);
