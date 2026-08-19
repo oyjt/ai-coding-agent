@@ -55,6 +55,8 @@ function getVerificationGates(classification: AgentPlan['classification']): Veri
 
 export { prepareAgent } from './prepare.js';
 export { executeAgent } from './execute.js';
+export { runAgent } from './run.js';
 export type { AgentPreparationOptions, AgentPreparationResult } from './prepare.js';
 export type { AgentExecutionOptions, AgentExecutionResult } from './execute.js';
+export type { AgentRunOptions, AgentRunResult } from './run.js';
 export type { AgentPlan, VerificationGates } from './types.js';
