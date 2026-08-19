@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "bin": { "aca": "dist/index.js" },
+  "bin": { "aca": "dist/bin.js" },
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
