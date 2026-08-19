@@ -13,6 +13,7 @@ import {
   getRuntimeAdapter,
   inspectProject,
   prepareAgent,
+  readAgentTaskStatus,
   runAgent,
 } from '@ai-coding-agent/core';
 import { join } from 'node:path';
@@ -108,9 +109,36 @@ async function runTask(description: string): Promise<void> {
   }
 }
 
+async function showTaskStatus(): Promise<void> {
+  const cwd = process.cwd();
+  const status = await readAgentTaskStatus(cwd);
+  console.log('ACA task status');
+  if (!status.found || !status.result) {
+    console.log('  Status:       not-found');
+    console.log('  Evidence:     .claude/execution.json');
+    return;
+  }
+
+  const { result } = status;
+  console.log(`  Attempts:     ${result.attempts}`);
+  console.log(`  Status:       ${result.status}`);
+  console.log(`  Execution:    ${result.execution.passed ? 'passed' : 'failed'}`);
+  if (result.verification) console.log(`  Verification: ${result.verification.canComplete ? 'passed' : 'failed'}`);
+  console.log(`  Completed:    ${result.completed ? 'yes' : 'no'}`);
+  console.log(`  Evidence:     ${join(cwd, '.claude', 'execution.json')}`);
+  if (result.verification?.blockers.length) {
+    console.log('  Blockers:');
+    for (const blocker of result.verification.blockers) console.log(`    - ${blocker}`);
+  }
+}
+
 async function main(): Promise<void> {
   if (args[0] === 'task' && args[1] === 'run') {
     await runTask(args.slice(2).join(' '));
+    return;
+  }
+  if (args[0] === 'task' && args[1] === 'status') {
+    await showTaskStatus();
     return;
   }
 
