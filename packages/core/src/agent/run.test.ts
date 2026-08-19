@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -71,17 +71,53 @@ test('runAgent verifies successful execution before completion', async () => {
   assert.equal(result.execution.exitCode, 0);
   assert.equal(result.verification?.passed, true);
   assert.equal(result.completed, true);
+  assert.equal(result.attempts, 1);
+  assert.equal(result.status, 'passed');
 });
 
-test('runAgent does not complete when verification fails', async () => {
+test('runAgent repairs once after verification failure and completes', async () => {
   const cwd = await mkdtemp(join(tmpdir(), 'acai-run-'));
   await writeFile(join(cwd, 'package.json'), '{}');
   const plan = createPlan();
   plan.verificationPlan.commands[0].args = ['-e', 'process.exit(1)'];
+  let executions = 0;
+  const options = createOptions(cwd, plan);
+  options.runtime.execute = async () => {
+    executions += 1;
+    if (executions === 1) plan.verificationPlan.commands[0].args = ['-e', 'process.exit(0)'];
+    return { exitCode: 0, output: executions === 1 ? 'initial' : 'repaired' };
+  };
 
-  const result = await runAgent(plan, createOptions(cwd, plan));
+  const result = await runAgent(plan, { ...options, maxAttempts: 3 });
+  const attempt1 = JSON.parse(await readFile(join(cwd, '.claude', 'attempts', '1.json'), 'utf8')) as { status: string };
+  const attempt2 = JSON.parse(await readFile(join(cwd, '.claude', 'attempts', '2.json'), 'utf8')) as { status: string };
 
-  assert.equal(result.execution.exitCode, 0);
-  assert.equal(result.verification?.passed, false);
+  assert.equal(executions, 2);
+  assert.equal(result.completed, true);
+  assert.equal(result.attempts, 2);
+  assert.equal(result.status, 'passed');
+  assert.equal(attempt1.status, 'failed');
+  assert.equal(attempt2.status, 'passed');
+});
+
+test('runAgent stops after maxAttempts when verification keeps failing', async () => {
+  const cwd = await mkdtemp(join(tmpdir(), 'acai-run-'));
+  await writeFile(join(cwd, 'package.json'), '{}');
+  const plan = createPlan();
+  plan.verificationPlan.commands[0].args = ['-e', 'process.exit(1)'];
+  let executions = 0;
+  const options = createOptions(cwd, plan);
+  options.runtime.execute = async () => {
+    executions += 1;
+    return { exitCode: 0, output: `attempt ${executions}` };
+  };
+
+  const result = await runAgent(plan, { ...options, maxAttempts: 2 });
+  const attempt2 = JSON.parse(await readFile(join(cwd, '.claude', 'attempts', '2.json'), 'utf8')) as { status: string };
+
+  assert.equal(executions, 2);
   assert.equal(result.completed, false);
+  assert.equal(result.attempts, 2);
+  assert.equal(result.status, 'max_attempts');
+  assert.equal(attempt2.status, 'max_attempts');
 });
