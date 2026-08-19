@@ -11,14 +11,24 @@ function matchesPath(path: string, patterns: string[]): boolean {
 
 export function guardWorkspaceChanges(before: WorkspaceSnapshot, after: WorkspaceSnapshot, options: WorkspaceGuardOptions = {}): WorkspaceGuardResult {
   const protectedPaths = [...DEFAULT_PROTECTED_PATHS, ...(options.protectedPaths ?? [])];
+  const allowedPaths = options.allowedPaths ?? [];
   const beforePaths = new Set([...before.modified, ...before.untracked]);
   const changes = new Map<string, WorkspaceChange>();
   const currentPaths = new Set([...after.modified, ...after.untracked]);
 
   for (const path of [...after.modified, ...after.untracked]) {
     if (beforePaths.has(path)) continue;
-    const status = matchesPath(path, protectedPaths) ? 'blocked' : matchesPath(path, options.allowedPaths ?? []) ? 'allowed' : 'unexpected';
-    changes.set(path, { path, kind: after.untracked.includes(path) ? 'added' : 'modified', status, ...(status === 'blocked' ? { reason: 'protected path' } : status === 'unexpected' ? { reason: 'outside allowed paths' } : {}) });
+    const status = matchesPath(path, protectedPaths)
+      ? 'blocked'
+      : allowedPaths.length === 0 || matchesPath(path, allowedPaths)
+        ? 'allowed'
+        : 'unexpected';
+    changes.set(path, {
+      path,
+      kind: after.untracked.includes(path) ? 'added' : 'modified',
+      status,
+      ...(status === 'blocked' ? { reason: 'protected path' } : status === 'unexpected' ? { reason: 'outside allowed paths' } : {}),
+    });
   }
 
   for (const path of before.modified) {
