@@ -41,6 +41,7 @@ function createPlan(): AgentPlan {
       commands: [{ id: 'lint', command: 'node', args: ['-e', 'process.exit(0)'], required: true, reason: 'test' }],
       manualGates: [],
     },
+    approval: { required: false, confirmed: false, status: 'not_required' },
   };
 }
 
