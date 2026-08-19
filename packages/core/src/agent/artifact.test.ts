@@ -16,7 +16,10 @@ test('writeAgentExecutionEvidence writes execution.json', async () => {
       passed: true,
       output: 'done',
     },
+    verification: undefined,
     completed: true,
+    attempts: 1,
+    status: 'passed' as const,
   };
 
   const file = await writeAgentExecutionEvidence(cwd, result);
@@ -24,4 +27,6 @@ test('writeAgentExecutionEvidence writes execution.json', async () => {
 
   assert.equal(content.completed, true);
   assert.equal(content.execution.exitCode, 0);
+  assert.equal(content.attempts, 1);
+  assert.equal(content.status, 'passed');
 });
