@@ -59,7 +59,7 @@ function createOptions(cwd: string, plan: AgentPlan) {
     ready: true,
     blockers: [],
   };
-  return { cwd, plan, runtime, permissions, preparation };
+  return { cwd, plan, runtime, permissions, preparation, workspaceGuard: false };
 }
 
 test('runAgent verifies successful execution before completion', async () => {
