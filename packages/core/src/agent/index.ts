@@ -30,6 +30,7 @@ export function createAgentPlan(
   const capabilities = resolveCapabilities(workflow, dependencies);
   const verification = getVerificationGates(classification);
   const verificationPlan = createVerificationPlan({ cwd, taskLevel: classification.level, projectType: options.projectType });
+  const approval = getApprovalPolicy(classification);
 
   return {
     description,
@@ -41,6 +42,7 @@ export function createAgentPlan(
     capabilities,
     verification,
     verificationPlan,
+    approval,
   };
 }
 
@@ -53,6 +55,15 @@ function getVerificationGates(classification: AgentPlan['classification']): Veri
   };
 }
 
+function getApprovalPolicy(classification: AgentPlan['classification']): AgentPlan['approval'] {
+  const required = classification.level === 'L' || classification.level === 'CRITICAL';
+  return {
+    required,
+    confirmed: false,
+    status: required ? 'required' : 'not_required',
+  };
+}
+
 export { prepareAgent } from './prepare.js';
 export { executeAgent } from './execute.js';
 export { runAgent } from './run.js';
@@ -61,4 +72,4 @@ export type { AgentPreparationOptions, AgentPreparationResult } from './prepare.
 export type { AgentExecutionOptions, AgentExecutionResult } from './execute.js';
 export type { AgentRunOptions, AgentRunResult } from './run.js';
 export type { AgentTaskStatus } from './status.js';
-export type { AgentPlan, VerificationGates } from './types.js';
+export type { AgentPlan, AgentApproval, AgentApprovalStatus, VerificationGates } from './types.js';
