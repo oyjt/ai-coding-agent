@@ -11,10 +11,12 @@ import {
 import {
   createAgentPlan,
   getRuntimeAdapter,
+  hasValidAgentApproval,
   inspectProject,
   prepareAgent,
   readAgentTaskStatus,
   runAgent,
+  writeAgentApproval,
 } from '@ai-coding-agent/core';
 import { join } from 'node:path';
 
@@ -55,6 +57,43 @@ async function createTaskContext(description: string, install: boolean) {
   return { cwd, plan, runtime, runtimeName, preparation, permissions };
 }
 
+async function approveTask(description: string): Promise<void> {
+  const task = description.trim();
+  if (!task) {
+    console.error('用法: aca task approve <任务描述>');
+    process.exitCode = 1;
+    return;
+  }
+
+  try {
+    const { cwd, plan, preparation } = await createTaskContext(task, false);
+    if (plan.classification.level !== 'CRITICAL') {
+      console.error('ACA task approve');
+      console.error(`  Level:  ${plan.classification.level}`);
+      console.error('  Status: approval artifact is only required for CRITICAL tasks.');
+      process.exitCode = 1;
+      return;
+    }
+    if (!preparation.ready) {
+      console.error('ACA task approve');
+      console.error('  Ready: no');
+      for (const blocker of preparation.blockers) console.error(`  ! ${blocker}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    const file = await writeAgentApproval(cwd, plan);
+    console.log('ACA task approve');
+    console.log(`  Task:     ${plan.description}`);
+    console.log('  Level:    CRITICAL');
+    console.log('  Approved: yes');
+    console.log(`  Evidence: ${file}`);
+  } catch (error) {
+    console.error(`ACA: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  }
+}
+
 async function runTask(description: string): Promise<void> {
   const install = hasFlag('--install');
   const dryRun = hasFlag('--dry-run');
@@ -91,6 +130,7 @@ async function runTask(description: string): Promise<void> {
       console.log(`  Skills:       ${plan.skills.length}`);
       console.log(`  MCP:          ${plan.dependencies.mcp?.length ?? 0}`);
       console.log(`  CLI:          ${plan.dependencies.cli?.length ?? 0}`);
+      if (plan.classification.level === 'CRITICAL') console.log('  Approval:     use `aca task approve <task>` before execution');
       if (preparation.blockers.length) {
         console.log('  Blockers:');
         for (const blocker of preparation.blockers) console.log(`    - ${blocker}`);
@@ -99,15 +139,16 @@ async function runTask(description: string): Promise<void> {
     }
 
     if (plan.classification.level === 'CRITICAL') {
-      console.error('ACA task run');
-      console.error('  Approval: required');
-      console.error('  Status:   blocked');
-      console.error('CRITICAL tasks require an explicit approval artifact and cannot be approved with --confirm yet.');
-      process.exitCode = 1;
-      return;
-    }
-
-    if (plan.approval.required && !confirmed) {
+      const approved = await hasValidAgentApproval(cwd, plan);
+      if (!approved) {
+        console.error('ACA task run');
+        console.error('  Approval: required');
+        console.error('  Status:   blocked');
+        console.error('Run `aca task approve <task>` after reviewing the task plan.');
+        process.exitCode = 1;
+        return;
+      }
+    } else if (plan.approval.required && !confirmed) {
       console.error('ACA task run');
       console.error(`  Approval: required (${plan.classification.level})`);
       console.error('  Status:   blocked');
@@ -124,29 +165,15 @@ async function runTask(description: string): Promise<void> {
       return;
     }
 
-    await runtime.sync({
-      cwd,
-      permissions,
-      plan,
-      capabilities: preparation.capabilityContext,
-    });
-
-    const result = await runAgent(plan, {
-      cwd,
-      plan,
-      runtime,
-      permissions,
-      preparation,
-      maxAttempts,
-      confirmed,
-    });
+    await runtime.sync({ cwd, permissions, plan, capabilities: preparation.capabilityContext });
+    const result = await runAgent(plan, { cwd, plan, runtime, permissions, preparation, maxAttempts, confirmed });
 
     console.log('ACA task run');
     console.log(`  Task:         ${plan.description}`);
     console.log(`  Level:        ${plan.classification.level}`);
     console.log(`  Workflow:     ${plan.workflow.name}`);
     console.log(`  Runtime:      ${runtimeName}`);
-    console.log(`  Approval:     ${plan.approval.required ? 'confirmed' : 'not_required'}`);
+    console.log(`  Approval:     ${plan.classification.level === 'CRITICAL' || plan.approval.required ? 'confirmed' : 'not_required'}`);
     console.log(`  Attempts:     ${result.attempts}`);
     console.log(`  Status:       ${result.status}`);
     console.log(`  Execution:    ${result.execution.passed ? 'passed' : 'failed'}`);
@@ -187,6 +214,10 @@ async function showTaskStatus(): Promise<void> {
 async function main(): Promise<void> {
   if (args[0] === 'task' && args[1] === 'run') {
     await runTask(args.slice(2).join(' '));
+    return;
+  }
+  if (args[0] === 'task' && args[1] === 'approve') {
+    await approveTask(args.slice(2).join(' '));
     return;
   }
   if (args[0] === 'task' && args[1] === 'status') {
