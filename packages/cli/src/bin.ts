@@ -68,6 +68,7 @@ async function runTask(description: string): Promise<void> {
 
     const result = await runAgent(plan, {
       cwd,
+      plan,
       runtime,
       permissions,
       preparation,
