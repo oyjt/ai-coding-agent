@@ -3,6 +3,7 @@ import type { TaskClassification } from '../tasks/types.js';
 import type { ResolvedWorkflow } from '../workflows/types.js';
 import type { VerificationPlan } from '../verification/index.js';
 import type { CapabilityRequirement } from '../capabilities/index.js';
+import type { WorkspaceGuardResult, WorkspaceSnapshot } from '../workspace/index.js';
 
 export type AgentApprovalStatus = 'not_required' | 'required' | 'confirmed';
 
@@ -23,6 +24,10 @@ export interface AgentPlan {
   verification: VerificationGates;
   verificationPlan: VerificationPlan;
   approval: AgentApproval;
+  workspace?: {
+    allowedPaths: string[];
+    protectedPaths?: string[];
+  };
 }
 
 export interface VerificationGates {
@@ -30,4 +35,10 @@ export interface VerificationGates {
   rollbackPlan: boolean;
   securityReview: boolean;
   fullVerification: boolean;
+}
+
+export interface AgentWorkspaceEvidence {
+  before: WorkspaceSnapshot;
+  after: WorkspaceSnapshot;
+  guard: WorkspaceGuardResult;
 }
