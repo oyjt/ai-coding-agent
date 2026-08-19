@@ -58,16 +58,18 @@ async function createTaskContext(description: string, install: boolean) {
 async function runTask(description: string): Promise<void> {
   const install = hasFlag('--install');
   const dryRun = hasFlag('--dry-run');
+  const confirmed = hasFlag('--confirm');
   const maxAttemptsIndex = args.indexOf('--max-attempts');
   const maxAttempts = parseMaxAttempts(maxAttemptsIndex >= 0 ? args[maxAttemptsIndex + 1] : undefined);
   const task = description
     .replace(/(^|\s)--install(?=\s|$)/g, ' ')
     .replace(/(^|\s)--dry-run(?=\s|$)/g, ' ')
+    .replace(/(^|\s)--confirm(?=\s|$)/g, ' ')
     .replace(/(^|\s)--max-attempts\s+\d+(?=\s|$)/g, ' ')
     .trim();
 
   if (!task) {
-    console.error('用法: aca task run <任务描述> [--install] [--dry-run] [--max-attempts <1-10>]');
+    console.error('用法: aca task run <任务描述> [--install] [--dry-run] [--confirm] [--max-attempts <1-10>]');
     process.exitCode = 1;
     return;
   }
@@ -83,6 +85,8 @@ async function runTask(description: string): Promise<void> {
       console.log(`  Workflow:     ${plan.workflow.name}`);
       console.log(`  Runtime:      ${runtimeName}`);
       console.log(`  Ready:        ${preparation.ready ? 'yes' : 'no'}`);
+      console.log(`  Approval:     ${plan.approval.status}`);
+      console.log(`  Confirmed:    ${confirmed ? 'yes' : 'no'}`);
       console.log(`  Max attempts: ${maxAttempts ?? 3}`);
       console.log(`  Skills:       ${plan.skills.length}`);
       console.log(`  MCP:          ${plan.dependencies.mcp?.length ?? 0}`);
@@ -91,6 +95,24 @@ async function runTask(description: string): Promise<void> {
         console.log('  Blockers:');
         for (const blocker of preparation.blockers) console.log(`    - ${blocker}`);
       }
+      return;
+    }
+
+    if (plan.classification.level === 'CRITICAL') {
+      console.error('ACA task run');
+      console.error('  Approval: required');
+      console.error('  Status:   blocked');
+      console.error('CRITICAL tasks require an explicit approval artifact and cannot be approved with --confirm yet.');
+      process.exitCode = 1;
+      return;
+    }
+
+    if (plan.approval.required && !confirmed) {
+      console.error('ACA task run');
+      console.error(`  Approval: required (${plan.classification.level})`);
+      console.error('  Status:   blocked');
+      console.error('Re-run with --confirm after reviewing the task plan.');
+      process.exitCode = 1;
       return;
     }
 
@@ -116,6 +138,7 @@ async function runTask(description: string): Promise<void> {
       permissions,
       preparation,
       maxAttempts,
+      confirmed,
     });
 
     console.log('ACA task run');
@@ -123,6 +146,7 @@ async function runTask(description: string): Promise<void> {
     console.log(`  Level:        ${plan.classification.level}`);
     console.log(`  Workflow:     ${plan.workflow.name}`);
     console.log(`  Runtime:      ${runtimeName}`);
+    console.log(`  Approval:     ${plan.approval.required ? 'confirmed' : 'not_required'}`);
     console.log(`  Attempts:     ${result.attempts}`);
     console.log(`  Status:       ${result.status}`);
     console.log(`  Execution:    ${result.execution.passed ? 'passed' : 'failed'}`);
