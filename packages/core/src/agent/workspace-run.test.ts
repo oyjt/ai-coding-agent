@@ -23,7 +23,7 @@ function createPlan(allowedPaths: string[] = []): AgentPlan {
     skills: [],
     capabilities: [],
     verification: { spec: false, rollbackPlan: false, securityReview: false, fullVerification: false },
-    verificationPlan: { taskLevel: 'S', projectType: 'node', packageManager: 'pnpm', commands: [{ id: 'verify', command: 'node', args: ['-e', 'process.exit(0)'], required: true, reason: 'test' }], manualGates: [] },
+    verificationPlan: { taskLevel: 'S', projectType: 'node', packageManager: 'pnpm', commands: [], manualGates: [] },
     approval: { required: false, confirmed: false, status: 'not_required' },
     workspace: { allowedPaths },
   };
