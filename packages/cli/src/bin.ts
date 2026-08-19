@@ -15,7 +15,6 @@ import {
   prepareAgent,
   runAgent,
 } from '@ai-coding-agent/core';
-import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2);
@@ -54,7 +53,7 @@ async function runTask(description: string): Promise<void> {
 
     if (!preparation.ready) {
       console.error('ACA task run');
-      console.error(`  Ready:    no`);
+      console.error('  Ready:    no');
       for (const blocker of preparation.blockers) console.error(`  ! ${blocker}`);
       process.exitCode = 1;
       return;
@@ -75,14 +74,14 @@ async function runTask(description: string): Promise<void> {
     });
 
     console.log('ACA task run');
-    console.log(`  Task:       ${plan.description}`);
-    console.log(`  Level:      ${plan.classification.level}`);
-    console.log(`  Workflow:   ${plan.workflow.name}`);
-    console.log(`  Runtime:    ${runtimeName}`);
-    console.log(`  Execution:  ${result.execution.passed ? 'passed' : 'failed'}`);
+    console.log(`  Task:         ${plan.description}`);
+    console.log(`  Level:        ${plan.classification.level}`);
+    console.log(`  Workflow:     ${plan.workflow.name}`);
+    console.log(`  Runtime:      ${runtimeName}`);
+    console.log(`  Execution:    ${result.execution.passed ? 'passed' : 'failed'}`);
     if (result.verification) console.log(`  Verification: ${result.verification.canComplete ? 'passed' : 'failed'}`);
-    console.log(`  Completed:  ${result.completed ? 'yes' : 'no'}`);
-    console.log(`  Evidence:   ${join(cwd, '.claude', 'execution.json')}`);
+    console.log(`  Completed:    ${result.completed ? 'yes' : 'no'}`);
+    console.log(`  Evidence:     ${join(cwd, '.claude', 'execution.json')}`);
 
     if (!result.completed) process.exitCode = 1;
   } catch (error) {
@@ -100,8 +99,4 @@ async function main(): Promise<void> {
   await import('./index.js');
 }
 
-if (existsSync(join(process.cwd(), DEFAULT_AGENT_DIR))) {
-  await main();
-} else {
-  await main();
-}
+await main();
