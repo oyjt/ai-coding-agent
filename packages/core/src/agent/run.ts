@@ -11,6 +11,7 @@ export interface AgentRunOptions extends Omit<AgentExecutionOptions, 'plan'> {
   verify?: boolean;
   writeEvidence?: boolean;
   maxAttempts?: number;
+  confirmed?: boolean;
 }
 
 export interface AgentRunResult {
@@ -32,6 +33,10 @@ export async function runAgent(plan: AgentPlan, options: AgentRunOptions): Promi
   let prompt = options.prompt;
   let lastExecution: AgentExecutionResult | undefined;
   let lastVerification: VerificationEvidence | undefined;
+
+  if (plan.approval.required && !options.confirmed) {
+    throw new Error('Agent execution requires explicit confirmation. Re-run with --confirm.');
+  }
 
   if (!options.preparation.ready) {
     throw new Error(`Agent execution blocked: ${options.preparation.blockers.join('; ') || 'capabilities are not ready'}`);
